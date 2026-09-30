@@ -107,7 +107,7 @@ Every ingested route has a named consumer. Routes without a consumer are disable
 | 8 | `/v3/cryptocurrency/quotes/latest` | Technical, Fundamental, reconciliation | 5 min | 8,640 | core | no |
 | 9 | `/v3/cryptocurrency/quotes/historical` | Technical backfill | batches | ~2,000 | backfill | no |
 | 10 | `/v2/cryptocurrency/price-performance-stats/latest` | Technical (ATH/ATL distance, period performance) | daily | ~100 | core | no |
-| 11 | `/v3/cryptocurrency/listings/latest` | Universe (top 500) | 1 h | 2,160 | core | yes |
+| 11 | `/v3/cryptocurrency/listings/latest` | Universe (top 500) | 1 h | 3,600 | core | yes |
 | 12 | `/v1/cryptocurrency/map` | Symbol map | daily | 30 | core | yes |
 | 13 | `/v1/cryptocurrency/trending/latest` | News attention | 15 min | 2,880 | core | no |
 | 14 | `/v1/cryptocurrency/trending/gainers-losers` | News, Technical | 15 min | 2,880 | core | no |

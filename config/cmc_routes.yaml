@@ -166,7 +166,7 @@ routes:
     shed_class: price
     consumers: [universe]
     enabled: true
-    est_credits_month: 2160        # 720 calls x 3 credits (CMC bills listings per 200 rows, limit 500)
+    est_credits_month: 3600        # keyed fallback: 720 calls x 5 credits (1 + 1 per 100 rows beyond 100, limit 500)
     params:
       limit: 500
   - id: 12
