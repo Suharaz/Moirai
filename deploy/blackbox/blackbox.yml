@@ -1,0 +1,33 @@
+# Blackbox exporter modules (phase 10), shared by the two probers of docker-compose.yml:
+# - `blackbox` (net_monitor + net_console + net_proxy): config-api, console, egress-proxy; listens only on
+#   its fixed net_monitor address;
+# - `blackbox-edge` (net_edge + net_probe_edge): caddy and the public dashboard; listens only on its fixed
+#   net_probe_edge address (prometheus is the only other container there).
+# So nothing on the probed networks can drive either prober.
+# Targets are listed in deploy/prometheus/prometheus.yml (jobs probe-*).
+
+modules:
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      preferred_ip_protocol: ip4
+      ip_protocol_fallback: false
+      follow_redirects: false
+      valid_status_codes: [200]
+
+  # egress-proxy answers and still denies: a plain-HTTP GET from a client that may only open HTTPS
+  # tunnels must be refused with 403 by Squid (deploy/squid/squid.conf). Any other answer fails the probe.
+  # The target (`egress-denied.invalid`) never resolves and nothing leaves the host: the exporter must
+  # hand the name to the proxy instead of resolving it first (without the skip flag the lookup fails and
+  # the probe can never succeed).
+  egress_denied:
+    prober: http
+    timeout: 10s
+    http:
+      preferred_ip_protocol: ip4
+      ip_protocol_fallback: false
+      follow_redirects: false
+      valid_status_codes: [403]
+      proxy_url: http://egress-proxy:3128
+      skip_resolve_phase_with_proxy: true

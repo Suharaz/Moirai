@@ -1,0 +1,88 @@
+# Public edge behind a host reverse proxy (docker-compose.behind-proxy.yml): the host's web server (for
+# example Nginx) terminates TLS for HDT_PUBLIC_HOSTNAME and proxies plain HTTP to 127.0.0.1:18080,
+# published to this container's port 8080. Routing, headers, rate limit and blocked Streamlit endpoints are
+# the same as deploy/caddy/Caddyfile; only TLS and the listener differ. The rate limit keys on the
+# CDN client address when the host sits behind a CDN, else on the proxy's forwarded address.
+#
+# Environment (docker-compose.yml): HDT_PUBLIC_HOSTNAME (dashboard DNS name).
+{
+	admin off
+	auto_https off
+	http_port 8080
+	order rate_limit before basic_auth
+	order cache before rewrite
+	cache {
+		otter {
+			configuration {
+				size 2000
+			}
+		}
+		ttl 300s
+	}
+	servers {
+		protocols h1
+		trusted_proxies static private_ranges
+		timeouts {
+			read_header 10s
+			idle 2m
+		}
+	}
+}
+
+http://{$HDT_PUBLIC_HOSTNAME}:8080 {
+	log {
+		output stdout
+		format json
+	}
+	encode zstd gzip
+
+	# Per-client request budget; a page load is about 30 requests, the app itself is one WebSocket.
+	rate_limit {
+		zone per_client {
+			key {http.request.header.CF-Connecting-IP}{client_ip}
+			events 300
+			window 1m
+		}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		# Streamlit's frontend needs inline styles and scripts plus eval (Vega charts); everything is
+		# served from this origin and the app talks to it over one WebSocket.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://{$HDT_PUBLIC_HOSTNAME}; worker-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
+		-Server
+	}
+
+	@blocked path /app/_stcore/upload_file/* /app/_stcore/message* /app/_stcore/metrics*
+	handle @blocked {
+		respond 404
+	}
+
+	@static path /app/static/* /app/app/static/* /app/favicon.png
+	handle @static {
+		cache
+		reverse_proxy dashboard:8501
+	}
+
+	@dashboard path /app /app/*
+	handle @dashboard {
+		reverse_proxy dashboard:8501
+	}
+
+	handle {
+		root * /srv/landing
+		@landing_assets path /fonts/* /assets/*
+		header @landing_assets Cache-Control "public, max-age=86400"
+		file_server
+	}
+}
+
+# Liveness only: the container healthcheck and the blackbox-edge probe on net_edge. Never published.
+http://:8081 {
+	respond /health "ok" 200
+	respond 404
+}

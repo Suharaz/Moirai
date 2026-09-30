@@ -1,0 +1,4 @@
+# Alertmanager: the external dead-man check that receives the Watchdog pings (healthchecks.io ping
+# host by default). Another provider: put its ping host here and its URL in
+# secrets/alertmanager_deadman_url (docs/runbook.md section 9).
+hc-ping.com

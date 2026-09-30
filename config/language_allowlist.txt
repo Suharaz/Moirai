@@ -1,0 +1,2 @@
+# Exact proper names that may contain Vietnamese letters, one per line. Empty by default.
+# Every entry must be reviewed; generic words are never allowed.

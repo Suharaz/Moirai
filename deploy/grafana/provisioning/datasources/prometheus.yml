@@ -1,0 +1,14 @@
+# Grafana datasource (phase 10): the local Prometheus on net_monitor. Read-only provisioning.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 30s
+      httpMethod: POST

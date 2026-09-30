@@ -1,0 +1,19 @@
+Self-hosted landing page fonts (latin subset only; all copy is English). Loaded by css/landing.css from this
+directory, so the landing page never requests a third-party font (CSP default-src 'self').
+
+Fira Sans 400/500/600 and Fira Code 400/500: copied from src/hdt/public_dashboard/static/fonts/
+  (npm @fontsource/fira-sans@5.3.0 and @fontsource/fira-code@5.3.0; see SOURCES.txt there)
+  license SIL Open Font License 1.1 (LICENSE-FiraSans-OFL.txt, LICENSE-FiraCode-OFL.txt)
+Cinzel 400/600: npm @fontsource/cinzel@5.3.0 files/cinzel-latin-<weight>-normal.woff2
+  downloaded from https://cdn.jsdelivr.net/fontsource/fonts/cinzel@latest/latin-<weight>-normal.woff2
+  (latest resolved to 5.3.0 on download)
+  license SIL Open Font License 1.1 (LICENSE-Cinzel-OFL.txt, from github.com/google/fonts ofl/cinzel/OFL.txt)
+
+sha256
+b873cdd90d6bd9ca4793c805b4175abfae00b3611ee8afccf63067133dcf1217  cinzel-latin-400-normal.woff2
+61efc27ceb7d08bb841652fa8979c0b6833b92548b7f9544c07968a6c02f28e4  cinzel-latin-600-normal.woff2
+3e38d8c01fe97529fbf0a086bf958d724b723ca7fc8be77b4ba5745f6259b6ca  fira-sans-latin-400-normal.woff2
+88d3e420adee3fa99ae50c15b123e3c9a07ce0ec0c03a01bd6bdd5232822da28  fira-sans-latin-500-normal.woff2
+55e09735e30d8492afac5d59ac433c6b367bb7dd00c46e157cfe95c9fb29e833  fira-sans-latin-600-normal.woff2
+6dc9da171ccea71d525379ee1cbf51d143e31acac330a251bb71b3d6060e687c  fira-code-latin-400-normal.woff2
+9e4da5ad2c147be02544df5a732d22830a82b1e9800dc06267ba656f5c40f7e9  fira-code-latin-500-normal.woff2

@@ -1,0 +1,87 @@
+# Admin console (script-level Streamlit config, read for `streamlit run src/hdt/console/app.py`).
+# Reachable only over Tailscale or an SSH tunnel; never exposed publicly.
+
+[server]
+headless = true
+enableStaticServing = true
+enableXsrfProtection = true
+enableCORS = true
+runOnSave = false
+
+[browser]
+gatherUsageStats = false
+
+[client]
+# Hides the Streamlit main menu (theme is switched from the console top bar) and error internals.
+toolbarMode = "minimal"
+showErrorDetails = "none"
+showSidebarNavigation = true
+
+[runner]
+magicEnabled = false
+
+[theme]
+# Moirai glass palette, light by default (paper canvas, Ink text, Gilt accent); the aurora, the glass panels,
+# the night-glass dark mode and every component are applied by the shared stylesheet
+# (src/hdt/console/theme.py). Cinzel is for page titles only.
+base = "light"
+primaryColor = "#B8903F"
+backgroundColor = "#F5F3EF"
+secondaryBackgroundColor = "#EDE9E1"
+textColor = "#17141F"
+linkColor = "#7A5A1C"
+borderColor = "#DAD3C6"
+font = "Fira Sans"
+codeFont = "Fira Code"
+headingFont = "Fira Sans"
+baseFontSize = 14
+baseRadius = "14px"
+showWidgetBorder = true
+
+[[theme.fontFaces]]
+family = "Fira Sans"
+url = "app/static/fonts/fira-sans-latin-400-normal.woff2"
+weight = 400
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Fira Sans"
+url = "app/static/fonts/fira-sans-latin-500-normal.woff2"
+weight = 500
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Fira Sans"
+url = "app/static/fonts/fira-sans-latin-600-normal.woff2"
+weight = 600
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Fira Sans"
+url = "app/static/fonts/fira-sans-latin-700-normal.woff2"
+weight = 700
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Fira Code"
+url = "app/static/fonts/fira-code-latin-400-normal.woff2"
+weight = 400
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Fira Code"
+url = "app/static/fonts/fira-code-latin-500-normal.woff2"
+weight = 500
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Fira Code"
+url = "app/static/fonts/fira-code-latin-600-normal.woff2"
+weight = 600
+style = "normal"
+
+[[theme.fontFaces]]
+family = "Cinzel"
+url = "app/static/fonts/cinzel-latin-600-normal.woff2"
+weight = 600
+style = "normal"

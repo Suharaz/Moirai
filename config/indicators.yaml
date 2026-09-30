@@ -1,0 +1,88 @@
+# Indicator and feature parameters for the quant core (phase 03). Changing any value requires a new
+# feature_ver. A packet records feature_ver as "<feature_ver>.<scanner rule_version>" because the SPIKE
+# floor and validity thresholds live in config/scanner.yaml.
+schema_version: 1
+feature_ver: f1
+
+ema_periods: [20, 50, 200]
+adx_period: 14
+rsi_period: 14
+macd: [12, 26, 9]
+stoch_rsi: [14, 14, 3, 3]
+atr_period: 14
+bollinger: [20, 2.0]
+volume_ratio_window: 20
+candle_pattern_min_volume_ratio: 1.5   # TA-Lib CDL patterns count only at an S/R zone with this volume ratio
+zscore_window: 100
+beta_window_days: 30                   # beta_btc from 1h candles, point-in-time
+beta_min_bars: 168                     # fewer aligned 1 h returns: beta_btc is null
+migration_zm_window_days: 14
+migration_growth_window_h: 24          # G = peripheral minus core open interest growth over this window
+fdz_min_coins: 10                      # FDz needs this many coins with a valid FD in the cross-section
+cvd_windows: [5m, 15m, 1h]
+book_imbalance_levels: [5, 10]
+depth_band_pct: 1.0                    # depth within +-1 %
+
+liquidations:
+  list_cycle_window_s: 120             # pages of one CMC list cycle are fetched within this window
+  list_max_pages: 20
+  floor_history_min_samples: 24        # fewer hourly samples: the SPIKE floor uses liq_floor_usd only
+
+funding:
+  lookback_h: 4                        # dF_c and "hourly funding drops >= x %" compare now with t - 4 h
+  infer_window_h: 26                   # nextFundingTime history used to infer the funding interval
+  min_abs_per_h: 0.000001              # |F_c(t - 4 h)| below this: the relative drop is undefined
+  default_interval_h: 8                # fundingInfo lists only adjusted symbols; an absent one runs at 8 h
+
+reconcile:
+  funding_gap_per_h_max: 0.0001        # CMC Binance-pair funding vs Binance direct, per hour
+  oi_gap_frac_max: 0.10
+  price_gap_frac_max: 0.01             # CMC aggregate price vs Binance mark
+  liq_lb_tolerance_frac: 0.02          # CMC below the forceOrder lower bound by more than 2 % -> liq_mismatch
+  outlier_oi_jump_frac: 0.5            # venue |dOI| > 50 % within 15 min ...
+  outlier_window_min: 15
+  outlier_price_move_max: 0.01         # ... while the price moved less than 1 % -> venue dropped, `outlier`
+
+technical:
+  timeframes: [15m, 1h, 4h, 1d]        # 15m from Binance klines; 1h/4h/1d from CMC OHLCV hourly bars
+  cmc_history_days: 42
+  binance_history_days: 4
+  min_bars: 30
+  slope_bars: 5
+  pivot_width: 3
+  divergence_pivots: 2
+  sr_zone_atr: 0.5
+  pattern_timeframes: [1h, 4h]
+  patterns: [CDLENGULFING, CDLHAMMER, CDLINVERTEDHAMMER, CDLSHOOTINGSTAR, CDLHANGINGMAN, CDLMORNINGSTAR,
+             CDLEVENINGSTAR, CDLPIERCING, CDLDARKCLOUDCOVER, CDL3WHITESOLDIERS, CDL3BLACKCROWS, CDLHARAMI]
+
+micro:
+  taker_windows: [5m, 15m, 1h]
+  book_max_age_s: 10
+
+regime:
+  adx_trend_min: 25                    # BTC 4 h ADX at or above: trend, else sideways
+  vol_window_h: 168                    # realized volatility of BTC 1 h returns over 7 days ...
+  vol_reference_days: 30               # ... compared with its 30-day median: high or low volatility
+
+reserves:
+  stablecoins: [USDT, USDC, FDUSD, DAI, TUSD, USDE, PYUSD]
+  btc_symbol: BTC
+
+levels:
+  levels_ver: lv1
+  lookback_days: 7                     # Binance 15m klines aggregated into 1 h and 4 h swing pivots
+  pivot_width: 3
+  entry_atr_offsets: [0.0, 0.5]        # ATR-anchored entries; min_rr and the entry distance bound come
+                                       # from the pinned risk config (min_rr, max_entry_distance_atr)
+  min_separation_atr: 0.25
+  stop_buffer_atr: 0.2
+  stop_min_atr: 0.5
+  stop_max_atr: 3.0
+  stop_default_atr: 1.0
+  tp_max_atr: 6.0
+  tp_fallback_atr: 2.0
+  max_per_side: 5
+  volume_profile_bins: 50
+  volume_nodes: 3
+  wall_mult: 5.0                       # book level with qty >= 5x the median level qty is a wall

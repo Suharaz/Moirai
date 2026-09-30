@@ -1,0 +1,20 @@
+# Override for a shared host whose own web server already holds 80/443 (for example Nginx) and
+# that has no Tailscale: docker compose -f docker-compose.yml -f docker-compose.behind-proxy.yml ...
+# - caddy serves plain HTTP on 127.0.0.1:18080 (deploy/caddy/Caddyfile.behind-proxy); the host web server
+#   terminates TLS for HDT_PUBLIC_HOSTNAME and proxies to it (WebSocket upgrade on /app/_stcore/stream);
+# - console, Grafana and Langfuse bind to loopback only (HDT_TAILSCALE_IP=127.0.0.1 in .env.prod) and are
+#   reached over an SSH tunnel; Grafana moves to 13000 because host port 3000 is often taken.
+# Nothing is published on a public interface.
+services:
+  caddy:
+    ports: !override
+      - "127.0.0.1:18080:8080"
+    volumes: !override
+      - ./deploy/caddy/Caddyfile.behind-proxy:/etc/caddy/Caddyfile:ro
+      - ./web/landing:/srv/landing:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  grafana:
+    ports: !override
+      - "127.0.0.1:13000:3000"

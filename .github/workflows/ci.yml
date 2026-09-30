@@ -1,0 +1,61 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    env:
+      POSTGRES_PASSWORD: ci_postgres_password_only
+      HDT_TEST_PG_ADMIN_DSN: postgresql+psycopg://postgres:ci_postgres_password_only@localhost:5432/postgres
+      HDT_TEST_REDIS_URL: redis://localhost:6379
+    services:
+      postgres:
+        image: postgres:16.13@sha256:71e27bf60b70bded003791b5573f8b808365613f341df20ffcf0c1ed7bc13ddf
+        env:
+          POSTGRES_PASSWORD: ci_postgres_password_only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7.4.8@sha256:3e0669e42d4fe421c9dea0ba5fbc04d336b80b4f32a6c7d25bee3a1d089288a1
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.6.9"
+      - name: Lock is current
+        run: uv lock --check
+      - name: Install (hash-pinned lock)
+        run: uv sync --frozen
+      - name: Create service roles
+        run: |
+          for role in hdt_migrator hdt_recorder hdt_council hdt_scorer hdt_risk hdt_execution hdt_news hdt_veto_scan \
+                      hdt_configapi hdt_console_ro hdt_publisher_ro hdt_telegram; do
+            PGPASSWORD=$POSTGRES_PASSWORD psql -h localhost -U postgres -c "CREATE ROLE $role LOGIN PASSWORD 'ci_$role'"
+          done
+      - name: English-only check
+        run: uv run python scripts/check_language.py
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Type check
+        run: uv run mypy
+      - name: Tests
+        run: uv run pytest
+      - name: Dependency audit
+        run: |
+          uv export --frozen --format requirements-txt --no-emit-project > /tmp/req.txt
+          uv run pip-audit --disable-pip -r /tmp/req.txt
+      - name: OSV scan
+        uses: google/osv-scanner-action/osv-scanner-action@90b209d0ea55cea1da9fc0c4e65782cc6acb6e2e # v2.2.2
+        with:
+          scan-args: --lockfile=uv.lock

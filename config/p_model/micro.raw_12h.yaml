@@ -1,0 +1,39 @@
+# Per-agent, per-target p_model coefficients: config/p_model/<agent>.<target_type>.yaml (labels are never
+# pooled across target types). Written by scripts/fit_p_model.py as a new versioned file, promoted by review.
+schema_version: 1
+agent: micro
+p_model_ver: micro-raw_12h-pm0
+target_type: RAW_12H
+label_spec_version: lbl1
+fit_window_start: null
+fit_window_end: null
+sample_count: 0
+oos_logloss: null
+intercept: 0.0
+coefficients:
+  cvd_5m_oi: 0.0
+  cvd_15m_oi: 0.0
+  cvd_1h_oi: 0.0
+  book_imbalance_5: 0.0
+  book_imbalance_10: 0.0
+  taker_buy_ratio_5m: 0.0
+  taker_buy_ratio_15m: 0.0
+  taker_buy_ratio_1h: 0.0
+standardization:                # identity until the first fit (no lake samples yet)
+  cvd_5m_oi: {mean: 0.0, std: 1.0}
+  cvd_15m_oi: {mean: 0.0, std: 1.0}
+  cvd_1h_oi: {mean: 0.0, std: 1.0}
+  book_imbalance_5: {mean: 0.0, std: 1.0}
+  book_imbalance_10: {mean: 0.0, std: 1.0}
+  taker_buy_ratio_5m: {mean: 0.0, std: 1.0}
+  taker_buy_ratio_15m: {mean: 0.0, std: 1.0}
+  taker_buy_ratio_1h: {mean: 0.0, std: 1.0}
+families:
+  cvd: [cvd_5m_oi, cvd_15m_oi, cvd_1h_oi]
+  imbalance: [book_imbalance_5, book_imbalance_10]
+  taker_ratio: [taker_buy_ratio_5m, taker_buy_ratio_15m, taker_buy_ratio_1h]
+shrunk_families: [cvd, imbalance, taker_ratio]
+note: >-
+  Not fitted: gate G1 has not run on the recorded lake yet, so every feature family lacks data and
+  all coefficients are shrunk to 0 (p_model = sigmoid(0) = 0.5, the uninformed base rate). The first
+  fit (scripts/fit_p_model.py, L2 logistic, walk-forward) writes a new versioned file for review.

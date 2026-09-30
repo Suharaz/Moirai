@@ -1,0 +1,25 @@
+# DeepSeek direct API: the temporary LLM gateway (owner decision 2026-09-28; OpenRouter stays the default).
+# Prices are USD per 1M tokens as published on the source page below, read on `prices_read_on`. DeepSeek
+# replies carry token counts but no price, so the router computes `llm_calls.cost_usd` from this table.
+# Update the table (and `prices_read_on`) whenever DeepSeek changes its prices.
+schema_version: 1
+prices_source: https://api-docs.deepseek.com/quick_start/pricing
+prices_read_on: 2026-09-28
+# Peak hours: 01:00-04:00 and 06:00-10:00 UTC, Monday to Friday; every other hour is off-peak. Chinese
+# public holidays (off-peak for DeepSeek) are not modelled, so a holiday peak hour is costed at the peak
+# rate (an over-estimate, never an under-estimate).
+peak_weekdays_utc: [0, 1, 2, 3, 4]   # Monday = 0
+peak_hours_utc:                      # [start, end) hours
+  - {start: 1, end: 4}
+  - {start: 6, end: 10}
+models:
+  deepseek-flash:                    # DeepSeek-V4.1-Flash (legacy name deepseek-v4-flash is served by it)
+    name: DeepSeek-V4.1-Flash
+    context_length: 1000000
+    peak: {input_cache_hit: 0.006, input_cache_miss: 0.3, output: 1.2}
+    off_peak: {input_cache_hit: 0.003, input_cache_miss: 0.15, output: 0.6}
+  deepseek-v4-pro:
+    name: DeepSeek-V4-Pro-0813
+    context_length: 1000000
+    peak: {input_cache_hit: 0.044, input_cache_miss: 1.32, output: 3.96}
+    off_peak: {input_cache_hit: 0.022, input_cache_miss: 0.66, output: 1.98}

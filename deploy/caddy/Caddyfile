@@ -1,0 +1,101 @@
+# Public edge (phase 10): the only published port. Host 443 -> container 8443 (Caddy runs unprivileged).
+# Serves the static marketing landing page (web/landing, mounted read-only at /srv/landing) at the root
+# and proxies the public read-only dashboard under /app (Streamlit server.baseUrlPath = "app"); nothing
+# else is routed. TLS certificates come from ACME with the TLS-ALPN challenge on 443 (port 80 is never
+# published). Mounted read-only at /etc/caddy/Caddyfile.
+#
+# Environment (docker-compose.yml): HDT_PUBLIC_HOSTNAME (dashboard DNS name), HDT_ACME_EMAIL.
+{
+	admin off
+	http_port 8080
+	https_port 8443
+	auto_https disable_redirects
+	email {$HDT_ACME_EMAIL}
+	order rate_limit before basic_auth
+	order cache before rewrite
+	cache {
+		otter {
+			configuration {
+				size 2000
+			}
+		}
+		ttl 300s
+	}
+	servers {
+		protocols h1 h2
+		timeouts {
+			read_header 10s
+			idle 2m
+		}
+	}
+}
+
+{$HDT_PUBLIC_HOSTNAME} {
+	tls {
+		issuer acme {
+			disable_http_challenge
+		}
+	}
+	log {
+		output stdout
+		format json
+	}
+	encode zstd gzip
+
+	# Per-client request budget; a page load is about 30 requests, the app itself is one WebSocket.
+	rate_limit {
+		zone per_client {
+			key {remote_host}
+			events 300
+			window 1m
+		}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		# Streamlit's frontend needs inline styles and scripts plus eval (Vega charts); everything is
+		# served from this origin and the app talks to it over one WebSocket.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://{$HDT_PUBLIC_HOSTNAME}; worker-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
+		-Server
+	}
+
+	# The dashboard accepts no uploads and exposes no other Streamlit endpoint to the public (uploads,
+	# the message cache, the server's Prometheus metrics).
+	@blocked path /app/_stcore/upload_file/* /app/_stcore/message* /app/_stcore/metrics*
+	handle @blocked {
+		respond 404
+	}
+
+	# Dashboard static assets (JS, CSS, fonts under the base path) are identical for every visitor:
+	# cached at the edge.
+	@static path /app/static/* /app/app/static/* /app/favicon.png
+	handle @static {
+		cache
+		reverse_proxy dashboard:8501
+	}
+
+	# The dashboard itself (page, health and its one WebSocket at /app/_stcore/stream).
+	@dashboard path /app /app/*
+	handle @dashboard {
+		reverse_proxy dashboard:8501
+	}
+
+	# Everything else is the landing page: plain files, no proxying. Fonts and images change rarely.
+	handle {
+		root * /srv/landing
+		@landing_assets path /fonts/* /assets/*
+		header @landing_assets Cache-Control "public, max-age=86400"
+		file_server
+	}
+}
+
+# Liveness only: the container healthcheck (services/caddy/Dockerfile) and the blackbox-edge probe on
+# net_edge (deploy/prometheus/prometheus.yml). Port 8081 is never published.
+http://:8081 {
+	respond /health "ok" 200
+	respond 404
+}

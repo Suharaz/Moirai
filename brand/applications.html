@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Moirai - Application templates</title>
+<link rel="stylesheet" href="brand.css">
+<style>
+  /* Each .art is exported at its exact pixel size (see brand/README.md). */
+  body { padding: 40px; display: flex; flex-direction: column; gap: 40px; align-items: flex-start; background: #444; }
+  .art { position: relative; overflow: hidden; background: var(--obsidian); color: var(--bone); flex: none; }
+  .vignette::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 70% 50%, transparent 0, var(--obsidian) 72%); }
+  .art > * { position: relative; }
+
+  #og { width: 1200px; height: 630px; display: flex; align-items: center; padding: 0 96px; gap: 72px; }
+  #og .mark { width: 300px; height: 300px; }
+  #og .word { height: 58px; display: block; margin-bottom: 28px; }
+  #og .tag { font: 500 24px/1 var(--display); letter-spacing: 0.42em; color: var(--gilt); text-transform: uppercase; }
+  #og .line { font: 400 22px/1.5 var(--body); color: var(--ash); margin-top: 26px; max-width: 520px; }
+  #og .foot { position: absolute; left: 96px; right: 96px; bottom: 44px; display: flex; justify-content: space-between; font: 500 14px var(--mono); letter-spacing: 0.2em; color: var(--ash); text-transform: uppercase; }
+
+  #xheader { width: 1500px; height: 500px; display: flex; align-items: center; justify-content: flex-end; padding-right: 120px; }
+  #xheader .mark { position: absolute; left: 60px; top: -150px; width: 820px; height: 820px; opacity: 0.22; }
+  #xheader .block { text-align: right; }
+  #xheader .word { height: 64px; }
+  #xheader .tag { font: 500 22px/1 var(--display); letter-spacing: 0.42em; color: var(--gilt); margin-top: 26px; text-transform: uppercase; }
+
+  #icon { width: 512px; height: 512px; display: flex; align-items: center; justify-content: center; }
+  #icon img { width: 300px; height: 300px; }
+
+  #card-front, #card-back { width: 1004px; height: 650px; }
+  #card-front { display: flex; align-items: center; justify-content: center; }
+  #card-front img { height: 250px; }
+  #card-back { background: var(--paper); color: var(--ink); padding: 72px 80px; }
+  #card-back .mk { position: absolute; right: 72px; top: 64px; width: 96px; }
+  #card-back .name { font: 500 40px/1.1 var(--display); letter-spacing: 0.12em; text-transform: uppercase; }
+  #card-back .role { font: 500 15px/1 var(--mono); letter-spacing: 0.24em; text-transform: uppercase; color: var(--oxblood-ink); margin-top: 18px; }
+  #card-back .rows { position: absolute; left: 80px; bottom: 72px; font: 400 21px/1.75 var(--mono); color: #3A3444; }
+  #card-back .rule { position: absolute; left: 80px; right: 80px; bottom: 210px; height: 1px; background: #CFC6B2; }
+  #card-back .tag { position: absolute; right: 80px; bottom: 72px; font: 500 16px/1 var(--display); letter-spacing: 0.4em; text-transform: uppercase; color: #5E5868; }
+</style>
+</head>
+<body>
+
+<div class="art threads vignette" id="og">
+  <img class="mark" src="logo/moirai-mark.svg" alt="">
+  <div>
+    <img class="word" src="logo/moirai-wordmark.svg" alt="Moirai">
+    <div class="tag">Spin &middot; Measure &middot; Cut</div>
+    <div class="line">A council of AI agents for crypto perpetual futures. Every trade is spun, measured and cut.</div>
+  </div>
+  <div class="foot"><span>Paper-first, real money gated by G4</span><span>Not investment advice</span></div>
+</div>
+
+<div class="art threads vignette" id="xheader">
+  <img class="mark" src="logo/moirai-mark.svg" alt="">
+  <div class="block">
+    <img class="word" src="logo/moirai-wordmark.svg" alt="Moirai">
+    <div class="tag">Spin &middot; Measure &middot; Cut</div>
+  </div>
+</div>
+
+<div class="art" id="icon"><img src="logo/moirai-mark-solid.svg" alt=""></div>
+
+<div class="art threads vignette" id="card-front"><img src="logo/moirai-lockup-stacked.svg" alt="Moirai"></div>
+
+<div class="art" id="card-back">
+  <img class="mk" src="logo/moirai-mark-ink.svg" alt="">
+  <div class="name">Your Name</div>
+  <div class="role">Keeper of the thread</div>
+  <div class="rule"></div>
+  <div class="rows">console &middot; by invitation<br>telegram &middot; operator bot</div>
+  <div class="tag">Spin &middot; Measure &middot; Cut</div>
+</div>
+
+</body>
+</html>

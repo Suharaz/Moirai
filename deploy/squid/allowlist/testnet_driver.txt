@@ -1,0 +1,2 @@
+# testnet-driver: public market data of the Binance USDS-M testnet (marks, book, exchangeInfo).
+demo-fapi.binance.com

@@ -1,0 +1,1 @@
+{"Rules":[{"ID":"hdt-expire-old-versions","Status":"Enabled","Expiration":{"ExpiredObjectDeleteMarker":true},"NoncurrentVersionExpiration":{"NoncurrentDays":1}}]}

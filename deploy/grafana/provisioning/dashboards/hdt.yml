@@ -1,0 +1,14 @@
+# Grafana dashboards (phase 10): the JSON files of deploy/grafana/dashboards, mounted read-only at
+# /etc/grafana/dashboards. Changes made in the UI are not saved; edit the JSON in git.
+apiVersion: 1
+
+providers:
+  - name: hdt
+    folder: HDT
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 60
+    options:
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: false

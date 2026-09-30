@@ -1,0 +1,35 @@
+# Alertmanager (phase 10): only the dead-man path. Operator alerts reach Telegram through the telegram-bot,
+# which reads firing rules from the Prometheus API (hdt.ops.alerts.AlertMonitor), so every other alert goes
+# to the `discard` receiver here.
+#
+# The always-firing `Watchdog` rule (deploy/prometheus/alerts.yml) is sent every minute to an external
+# dead-man check (healthchecks.io style ping URL in the docker secret `alertmanager_deadman_url`, through
+# egress-proxy; allowlist deploy/squid/allowlist/deadman.txt). The check notifies the operator out of band
+# when the pings stop: host, Docker, Prometheus, Alertmanager or egress down. Alerts labelled
+# `hdt_deadman: stop` (the telegram-bot is stalled or failing to send, so Telegram alerts are not
+# delivered) inhibit the Watchdog, which stops the pings on purpose. Setup: docs/runbook.md section 9.
+
+route:
+  receiver: discard
+  group_by: [alertname]
+  routes:
+    - matchers: ['alertname="Watchdog"']
+      receiver: deadman
+      group_wait: 0s
+      group_interval: 1m
+      repeat_interval: 1m
+
+inhibit_rules:
+  - source_matchers: ['hdt_deadman="stop"']
+    target_matchers: ['alertname="Watchdog"']
+
+receivers:
+  - name: discard
+  - name: deadman
+    webhook_configs:
+      - url_file: /run/secrets/alertmanager_deadman_url
+        send_resolved: false
+        max_alerts: 1
+        timeout: 20s
+        http_config:
+          proxy_url: http://egress-proxy:3128

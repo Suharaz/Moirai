@@ -1,0 +1,7 @@
+# p_model fit parameters for scripts/fit_p_model.py (phase 03). Changing a value requires a new fit_version;
+# every fitted p_model file records the fit_version it was produced with.
+schema_version: 1
+fit_version: fit1
+l2_c: 0.1                       # inverse L2 strength (smaller = stronger shrinkage toward 0)
+folds: 5                        # walk-forward time blocks; blocks 2..folds are scored out of sample
+min_family_samples: 50          # a feature family with fewer rows carrying any of its values is shrunk to 0

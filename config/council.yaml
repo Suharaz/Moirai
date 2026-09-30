@@ -1,0 +1,40 @@
+# Council defaults (Design Contract section 3). Runtime values come from pinned console config versions.
+schema_version: 1
+
+agents: [crowding, technical, micro, fundamental, news, macro]
+horizon_h: 12
+stance_long: 0.55                 # LONG when p_used >= 0.55
+stance_short: 0.45                # SHORT when p_used <= 0.45
+quorum: 4                         # agents with an opinion
+supermajority: 0.6666666666666666 # winning side >= 2/3 of total normalized weight
+max_rounds: 3
+debate_enabled: true
+logit_bound_round: 0.5            # z_llm may move at most +-0.5 per round
+logit_bound_total: 1.0            # and at most +-1.0 from z_model in total
+llm_logit_margin: 0.5             # z_used = z_model + a * clip(z_llm - z_model, -0.5, 0.5)
+p_clip: [0.02, 0.98]
+correlation_groups:
+  momentum: [technical, micro]    # counts as one vote in the correlated-group consensus check
+
+manager:
+  p_long: 0.60
+  p_short: 0.40
+  d_threshold: 0.8                # weighted std dev of logits; calibrated from shadow data
+  size_consensus: 1.0
+  size_fallback: 0.5
+
+weights:
+  floor: 0.05
+  ceiling: 0.40
+  group_ceiling: 0.40
+  new_version_cap: 0.10           # effective weight cap until a new agent_version has 50 forecasts
+  min_forecasts_per_version: 50
+  a_initial: 1.0
+  r_initial: 0.5
+
+claim_max_chars: 280
+tool_budget:
+  max_calls: 8
+  max_seconds: 45
+min_event_spacing_min: 15         # a coin is convened at most once per 15 minutes
+scoring_window_h: 12              # one scored forecast per (coin, non-overlapping 12 h window)

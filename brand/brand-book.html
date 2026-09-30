@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Moirai - Brand book</title>
+<link rel="icon" href="logo/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="brand.css">
+<style>
+  main { max-width: 1120px; margin: 0 auto; padding: 0 48px 96px; }
+  section { padding: 72px 0; border-top: 1px solid var(--rule); }
+  h1 { margin: 0; }
+  h2 { font: 500 30px/1.2 var(--display); letter-spacing: 0.12em; text-transform: uppercase; margin: 14px 0 28px; }
+  h3 { font: 600 15px/1.3 var(--body); margin: 0 0 8px; color: var(--bone); }
+  p { margin: 0 0 14px; max-width: 68ch; }
+  .cover { min-height: 760px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 36px; border-top: 0; }
+  .cover img { width: 360px; }
+  .tagline { font: 500 22px/1 var(--display); letter-spacing: 0.42em; text-transform: uppercase; color: var(--gilt); }
+  .grid { display: grid; gap: 20px; }
+  .g2 { grid-template-columns: repeat(2, 1fr); }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .panel { background: var(--night); border: 1px solid var(--rule); border-radius: 4px; padding: 28px; }
+  .panel.light { background: var(--paper); color: var(--ink); border-color: #D9D1BF; }
+  .panel.light .muted { color: #5E5868; }
+  .panel.light h3 { color: var(--ink); }
+  .stage { height: 220px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+  .stage img { max-height: 180px; max-width: 100%; }
+  .fate { border-left: 2px solid var(--gilt); padding-left: 18px; }
+  .fate .name { font: 500 22px/1 var(--display); letter-spacing: 0.14em; text-transform: uppercase; }
+  .fate.cut { border-color: var(--oxblood); }
+  .swatch { border-radius: 4px; overflow: hidden; border: 1px solid var(--rule); }
+  .swatch .chip { height: 128px; }
+  .swatch .meta { background: var(--night); padding: 14px 16px; font: 400 13px/1.7 var(--mono); }
+  .swatch .meta b { font: 600 14px/1.4 var(--body); display: block; color: var(--bone); }
+  .ratio { display: flex; height: 36px; border-radius: 4px; overflow: hidden; margin-top: 24px; }
+  .type-sample { font-family: var(--display); font-size: 64px; letter-spacing: 0.14em; line-height: 1.1; text-transform: uppercase; }
+  .num { font: 500 40px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+  .pos { color: #4ADE80; } .neg { color: #F87171; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  td, th { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font: 500 12px/1 var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--gilt); }
+  .say { color: var(--bone); } .never { color: var(--ash); text-decoration: line-through; text-decoration-color: var(--oxblood); }
+  .clear { position: relative; width: 300px; height: 300px; margin: 0 auto; }
+  .clear .box { position: absolute; inset: 0; border: 1px dashed var(--ash); }
+  .clear .inner { position: absolute; inset: 50px; border: 1px solid var(--rule); }
+  .clear img { position: absolute; inset: 50px; width: 200px; height: 200px; }
+  .clear .x { position: absolute; font: 500 13px var(--mono); color: var(--gilt); }
+  .misuse .stage { height: 150px; position: relative; }
+  .misuse .panel { position: relative; }
+  .misuse .panel::before { content: "No"; position: absolute; top: 14px; left: 16px; font: 500 11px/1 var(--mono); letter-spacing: 0.24em; text-transform: uppercase; color: var(--ash); }
+  .misuse p { font-size: 14px; }
+  .sizes { display: flex; align-items: flex-end; gap: 28px; }
+  .sizes figure { margin: 0; text-align: center; font: 12px var(--mono); color: var(--ash); }
+  footer { padding-top: 48px; font: 12px var(--mono); color: var(--ash); letter-spacing: 0.1em; }
+</style>
+</head>
+<body>
+<main>
+
+<section class="cover threads">
+  <img src="logo/moirai-lockup-stacked.svg" alt="Moirai">
+  <div class="tagline">Spin &middot; Measure &middot; Cut</div>
+  <div class="eyebrow muted">Brand book &middot; v1 &middot; 2026-09-29</div>
+</section>
+
+<section>
+  <div class="eyebrow">01 &middot; The name</div>
+  <h2>Three sisters, one thread</h2>
+  <p>In Greek myth the Moirai decide every fate with a single thread. One spins it, one measures it, one cuts it. Moirai is a council of AI agents that trades crypto perpetual futures, and every trade it makes passes through the same three hands.</p>
+  <div class="grid g3" style="margin-top:32px">
+    <div class="fate"><div class="name">Clotho</div><p class="eyebrow" style="margin:10px 0 12px">spins</p><p class="muted">The council debates and spins a thesis: direction, probability, levels.</p></div>
+    <div class="fate"><div class="name">Lachesis</div><p class="eyebrow" style="margin:10px 0 12px">measures</p><p class="muted">Risk measures the thread: size, leverage and limits, signed before anything is sent.</p></div>
+    <div class="fate cut"><div class="name">Atropos</div><p class="eyebrow" style="margin:10px 0 12px;color:var(--oxblood)">cuts</p><p class="muted">The stop cuts the loss. Without hesitation, without appeal.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">02 &middot; The mark</div>
+  <h2>A thread drawn as a price path</h2>
+  <div class="grid g2">
+    <div class="panel"><div class="stage"><img src="logo/moirai-mark.svg" alt=""></div>
+      <h3>Read it three ways</h3>
+      <p class="muted">An M for Moirai. A price path: up, down, up, down. Three parallel strands for the three sisters: the thesis, the sizing and the exit. A thin blade crosses the last leg: Atropos cuts, the stop is honoured.</p></div>
+    <div class="panel"><div class="stage"><img src="logo/moirai-mark-solid.svg" alt=""></div>
+      <h3>The solid mark</h3>
+      <p class="muted">One heavy strand for small sizes. The severed end falls away as a single block, so the mark reads as a full stop: the decision is final.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">03 &middot; Logo system</div>
+  <h2>Lockups</h2>
+  <div class="grid g2">
+    <div class="panel"><div class="stage"><img src="logo/moirai-lockup-horizontal.svg" alt="" style="height:90px"></div><h3>Horizontal</h3><p class="muted">Default. Console header, documents, social profiles.</p></div>
+    <div class="panel light"><div class="stage"><img src="logo/moirai-lockup-horizontal-ink.svg" alt="" style="height:90px"></div><h3>Horizontal, ink</h3><p class="muted">On paper and light backgrounds. The blade stays oxblood.</p></div>
+    <div class="panel"><div class="stage"><img src="logo/moirai-lockup-stacked.svg" alt=""></div><h3>Stacked</h3><p class="muted">Covers, posters, splash screens.</p></div>
+    <div class="panel"><div class="stage"><img src="logo/moirai-wordmark.svg" alt="" style="height:60px"></div><h3>Wordmark</h3><p class="muted">Monoline capitals drawn at the strand weight. The A is a Greek lambda with no crossbar, an M turned upside down.</p></div>
+  </div>
+  <div class="grid g2" style="margin-top:20px">
+    <div class="panel">
+      <h3>Clear space</h3>
+      <p class="muted">Keep one quarter of the mark height free on every side. Nothing enters this zone: no text, no edge, no other mark.</p>
+      <div class="clear"><div class="box"></div><div class="inner"></div><img src="logo/moirai-mark.svg" alt=""><span class="x" style="left:14px;top:18px">x</span><span class="x" style="right:14px;bottom:18px">x = &frac14; h</span></div>
+    </div>
+    <div class="panel">
+      <h3>Minimum sizes</h3>
+      <p class="muted">Three strands need room. Below 40 px use the solid mark; below 24 px use the favicon, which is the solid mark on obsidian.</p>
+      <div class="sizes" style="margin-top:36px">
+        <figure><img src="logo/moirai-mark.svg" width="96" height="96" alt=""><figcaption>96</figcaption></figure>
+        <figure><img src="logo/moirai-mark.svg" width="48" height="48" alt=""><figcaption>48 min</figcaption></figure>
+        <figure><img src="logo/moirai-mark-solid.svg" width="32" height="32" alt=""><figcaption>32</figcaption></figure>
+        <figure><img src="logo/favicon.svg" width="24" height="24" alt=""><figcaption>24</figcaption></figure>
+        <figure><img src="logo/favicon.svg" width="16" height="16" alt=""><figcaption>16</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">04 &middot; Colour</div>
+  <h2>Night, gold and one drop of blood</h2>
+  <div class="grid g4">
+    <div class="swatch"><div class="chip" style="background:var(--obsidian);border-bottom:1px solid var(--rule)"></div><div class="meta"><b>Obsidian</b>#0B0A0F<br>ground</div></div>
+    <div class="swatch"><div class="chip" style="background:var(--gilt)"></div><div class="meta"><b>Gilt</b>#C9A55C<br>the thread, accents</div></div>
+    <div class="swatch"><div class="chip" style="background:var(--bone)"></div><div class="meta"><b>Bone</b>#ECE6D8<br>text on dark</div></div>
+    <div class="swatch"><div class="chip" style="background:var(--oxblood)"></div><div class="meta"><b>Oxblood</b>#B23A34 / #8E2424<br>the cut only</div></div>
+    <div class="swatch"><div class="chip" style="background:var(--night);border-bottom:1px solid var(--rule)"></div><div class="meta"><b>Night</b>#16131D<br>surfaces</div></div>
+    <div class="swatch"><div class="chip" style="background:var(--ash)"></div><div class="meta"><b>Ash</b>#8C8697<br>secondary text</div></div>
+    <div class="swatch"><div class="chip" style="background:var(--ink);border-bottom:1px solid var(--rule)"></div><div class="meta"><b>Ink</b>#17141F<br>mark on light</div></div>
+    <div class="swatch"><div class="chip" style="background:var(--paper)"></div><div class="meta"><b>Paper</b>#F4F0E6<br>light ground</div></div>
+  </div>
+  <div class="ratio"><div style="flex:70;background:var(--obsidian);border:1px solid var(--rule)"></div><div style="flex:18;background:var(--night)"></div><div style="flex:8;background:var(--gilt)"></div><div style="flex:3;background:var(--bone)"></div><div style="flex:1;background:var(--oxblood)"></div></div>
+  <p class="muted" style="margin-top:14px">Proportion 70 : 18 : 8 : 3 : 1. Oxblood is the blade and nothing else; it is never text on dark (contrast 2.7:1). Gilt and Bone pass 4.5:1 on Obsidian and Night. Gain and loss in data keep the console colours (green, red, always with a sign); Oxblood is not a loss colour.</p>
+</section>
+
+<section>
+  <div class="eyebrow">05 &middot; Type</div>
+  <h2>Carved capitals, working numbers</h2>
+  <div class="grid g2">
+    <div class="panel"><div class="type-sample">Cinzel</div><p class="muted" style="margin-top:16px">Display only: headlines, covers, section titles. Capitals, tracking +0.14em. Roman inscription letters, the voice of an old oath. Never for body text or numbers.</p></div>
+    <div class="panel"><div style="font:500 40px/1.2 var(--body)">Fira Sans</div><div class="num"><span class="pos">+2.41%</span> <span class="neg">-0.87%</span></div><p class="muted" style="margin-top:16px">Fira Sans for text, Fira Code with tabular figures for prices, sizes and ids. Already self-hosted in the console.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">06 &middot; Voice</div>
+  <h2>Speak like the oracle, report like an auditor</h2>
+  <p>Few words. Certain about what happened, humble about what will. Moirai never promises returns and never hides a loss.</p>
+  <table style="margin-top:24px">
+    <tr><th>Say</th><th>Never</th></tr>
+    <tr><td class="say">The council spun a LONG on SOL. Risk measured 0.4% of equity. Stop at 142.10.</td><td class="never">AI found a guaranteed 10x play!</td></tr>
+    <tr><td class="say">Thread cut at 142.10. -0.38%.</td><td class="never">Small dip, we're holding for the rebound.</td></tr>
+    <tr><td class="say">No trade. The sisters did not agree.</td><td class="never">Nothing interesting today, check back later!</td></tr>
+  </table>
+  <p class="muted" style="margin-top:18px">Words that belong: spin, measure, cut, thread, council. Words that do not: moon, guaranteed, easy, emoji.</p>
+</section>
+
+<section class="misuse">
+  <div class="eyebrow">07 &middot; Misuse</div>
+  <h2>Do not</h2>
+  <div class="grid g4">
+    <div class="panel"><div class="stage"><img src="logo/moirai-mark.svg" alt="" style="height:110px;filter:hue-rotate(160deg)"></div><p class="muted">Recolour the thread or turn the blade gold.</p></div>
+    <div class="panel"><div class="stage"><img src="logo/moirai-mark.svg" alt="" style="height:110px;transform:rotate(14deg)"></div><p class="muted">Rotate, skew or mirror the mark.</p></div>
+    <div class="panel"><div class="stage"><img src="logo/moirai-mark.svg" alt="" style="height:110px;filter:drop-shadow(0 0 10px #C9A55C)"></div><p class="muted">Add glow, gradients, bevels or shadows.</p></div>
+    <div class="panel light"><div class="stage"><img src="logo/moirai-mark.svg" alt="" style="height:110px"></div><p class="muted">Put the gilt mark on a light ground. Use the ink version.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">08 &middot; Applications</div>
+  <h2>In the world</h2>
+  <div class="grid g2">
+    <div class="panel"><img src="export/og-card-1200x630.png" alt="" style="width:100%"><h3 style="margin-top:14px">Link preview card</h3><p class="muted">1200 x 630. Public dashboard and shared links.</p></div>
+    <div class="panel"><img src="export/x-header-1500x500.png" alt="" style="width:100%"><h3 style="margin-top:14px">Social header</h3><p class="muted">1500 x 500.</p></div>
+    <div class="panel"><div class="stage"><img src="export/app-icon-512.png" alt="" style="height:160px;border-radius:50%"><img src="export/app-icon-512.png" alt="" style="height:160px;margin-left:24px;border-radius:22%"></div><h3>Telegram bot and app icon</h3><p class="muted">512 x 512, safe inside a circle crop.</p></div>
+    <div class="panel"><img src="export/business-card-front.png" alt="" style="width:48%"> <img src="export/business-card-back.png" alt="" style="width:48%;float:right"><h3 style="margin-top:14px;clear:both">Card</h3><p class="muted">85 x 55 mm, 1004 x 650 px at 300 dpi.</p></div>
+  </div>
+</section>
+
+<footer>MOIRAI &middot; BRAND BOOK V1 &middot; Leveraged trading can lose more than the capital allocated to it. Nothing here is investment advice.</footer>
+</main>
+</body>
+</html>

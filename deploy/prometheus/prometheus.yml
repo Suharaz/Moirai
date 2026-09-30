@@ -1,0 +1,173 @@
+# Prometheus (phase 10). Mounted read-only at /etc/prometheus; scrapes on net_data and net_monitor, and
+# reaches blackbox-edge on net_probe_edge.
+# Metric catalog: src/hdt/ops/metrics.py. Alert rules: alerts.yml; the telegram-bot mirrors every firing
+# rule that carries an `hdt_kind` label into the alert outbox (hdt.ops.alerts.AlertMonitor). Alertmanager
+# handles only the dead-man Watchdog (deploy/alertmanager/alertmanager.yml).
+#
+# Services whose code ships today are static targets: a missing or dead one scrapes as up == 0 and pages.
+# Services of later phases run under compose profiles (council, news, scoring, trading) and are found
+# through Docker DNS: they appear as targets once their profile is up, and `TargetDisappeared`
+# (alerts.yml) pages when one that was up stops resolving. The testnet driver is a one-shot CLI (profile
+# testnet-driver) with nothing to scrape.
+# Services without their own exporter are probed: config-api, console and egress-proxy by `blackbox`,
+# caddy and the public dashboard by `blackbox-edge`. Alertmanager, the exporters and `blackbox` listen
+# only on their fixed net_monitor address, `blackbox-edge` only on its net_probe_edge address
+# (docker-compose.yml), which is why they are addressed by IP here (a name could resolve to the address
+# of their other network).
+
+global:
+  scrape_interval: 30s
+  scrape_timeout: 10s
+  evaluation_interval: 30s
+  external_labels:
+    deployment: hdt
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["10.231.13.10:9093"]
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: alertmanager
+    static_configs:
+      - targets: ["10.231.13.10:9093"]
+
+  - job_name: node
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  - job_name: postgres
+    static_configs:
+      - targets: ["10.231.13.12:9187"]
+        labels: {service: postgres}
+
+  - job_name: redis
+    static_configs:
+      - targets: ["10.231.13.13:9121"]
+        labels: {service: redis}
+
+  - job_name: recorder
+    static_configs:
+      - targets: ["recorder:9102"]
+
+  - job_name: telegram-bot
+    static_configs:
+      - targets: ["telegram-bot:9464"]
+
+  - job_name: public-publisher
+    static_configs:
+      - targets: ["public-publisher:9464"]
+
+  # ------------------------------------------------------------------------------------------ probes
+  - job_name: blackbox
+    static_configs:
+      - targets: ["10.231.13.11:9115"]
+
+  - job_name: blackbox-edge
+    static_configs:
+      - targets: ["10.231.15.10:9115"]
+
+  - job_name: probe-internal
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets: ["http://config-api:8081/api/health"]
+        labels: {service: config-api}
+      - targets: ["http://console:8501/_stcore/health"]
+        labels: {service: console}
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 10.231.13.11:9115
+    metric_relabel_configs: &probe-metric-relabel
+      - source_labels: [__name__]
+        regex: probe_(success|duration_seconds|http_status_code)
+        action: keep
+
+  - job_name: probe-egress
+    metrics_path: /probe
+    params:
+      module: [egress_denied]
+    static_configs:
+      - targets: ["http://egress-denied.invalid/"]
+        labels: {service: egress-proxy}
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 10.231.13.11:9115
+    metric_relabel_configs: *probe-metric-relabel
+
+  - job_name: probe-edge
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets: ["http://caddy:8081/health"]
+        labels: {service: caddy}
+      - targets: ["http://dashboard:8501/app/_stcore/health"]
+        labels: {service: dashboard}
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 10.231.15.10:9115
+    metric_relabel_configs: *probe-metric-relabel
+
+  # --------------------------------------------------------------------------- later-phase services
+  - job_name: council
+    dns_sd_configs:
+      - names: ["council"]
+        type: A
+        port: 9464
+        refresh_interval: 30s
+
+  - job_name: news
+    dns_sd_configs:
+      - names: ["news"]
+        type: A
+        port: 9464
+        refresh_interval: 30s
+
+  - job_name: veto-scan
+    dns_sd_configs:
+      - names: ["veto-scan"]
+        type: A
+        port: 9464
+        refresh_interval: 30s
+
+  - job_name: scorer
+    dns_sd_configs:
+      - names: ["scorer"]
+        type: A
+        port: 9464
+        refresh_interval: 30s
+
+  - job_name: risk
+    dns_sd_configs:
+      - names: ["risk"]
+        type: A
+        port: 9464
+        refresh_interval: 30s
+
+  - job_name: execution
+    dns_sd_configs:
+      - names: ["execution"]
+        type: A
+        port: 9464
+        refresh_interval: 30s

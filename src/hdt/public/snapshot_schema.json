@@ -1,0 +1,1957 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://moirai/public/snapshot/v2.json",
+  "title": "Public performance snapshot",
+  "description": "Everything the public dashboard may show. Every object is closed (additionalProperties: false): a field outside the allowlist fails validation and the snapshot is not published. Trading is published in full (open-position levels, every order except the rejected ones, every decision card); no object carries order, algo or client ids, configuration, secrets, CMC credits, alerts, reconcile state or audit data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at",
+    "accounts",
+    "gates",
+    "scoring",
+    "decisions",
+    "decision_cards",
+    "agents",
+    "costs"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "accounts": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/account"
+      }
+    },
+    "gates": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "maxItems": 20,
+      "items": {
+        "$ref": "#/$defs/gate"
+      }
+    },
+    "scoring": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/scoring"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "decisions": {
+      "type": "array",
+      "maxItems": 5000,
+      "items": {
+        "$ref": "#/$defs/decision"
+      }
+    },
+    "decision_cards": {
+      "type": "array",
+      "maxItems": 5000,
+      "items": {
+        "$ref": "#/$defs/decision_card"
+      }
+    },
+    "agents": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/$defs/agents_view"
+      }
+    },
+    "costs": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/costs"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "account": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "account",
+        "equity_as_of",
+        "equity",
+        "day_start_equity",
+        "today_pnl",
+        "today_pnl_fraction",
+        "change_30d",
+        "change_30d_fraction",
+        "drawdown_fraction",
+        "equity_hourly_30d",
+        "equity_daily",
+        "open_positions",
+        "closed_trades",
+        "orders",
+        "trade_stats_30d"
+      ],
+      "properties": {
+        "account": {
+          "enum": [
+            "testnet",
+            "live"
+          ]
+        },
+        "equity_as_of": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "equity": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "day_start_equity": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "today_pnl": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "today_pnl_fraction": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "change_30d": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "change_30d_fraction": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "drawdown_fraction": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "maximum": 0
+        },
+        "equity_hourly_30d": {
+          "type": "array",
+          "maxItems": 800,
+          "items": {
+            "$ref": "#/$defs/equity_point"
+          }
+        },
+        "equity_daily": {
+          "type": "array",
+          "maxItems": 5000,
+          "items": {
+            "$ref": "#/$defs/equity_point"
+          }
+        },
+        "open_positions": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/open_position"
+          }
+        },
+        "closed_trades": {
+          "type": "array",
+          "maxItems": 20000,
+          "items": {
+            "$ref": "#/$defs/closed_trade"
+          }
+        },
+        "orders": {
+          "type": "array",
+          "maxItems": 2000,
+          "items": {
+            "$ref": "#/$defs/order"
+          }
+        },
+        "trade_stats_30d": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/trade_stats"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "equity_point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "t",
+        "equity"
+      ],
+      "properties": {
+        "t": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "equity": {
+          "type": "number"
+        }
+      }
+    },
+    "open_position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "symbol",
+        "side",
+        "qty",
+        "entry_price",
+        "mark_price",
+        "unrealized_pnl",
+        "stop_price",
+        "tp1_price",
+        "liquidation_price",
+        "leverage",
+        "margin_type",
+        "is_hedge_book",
+        "opened_at",
+        "time_stop_at"
+      ],
+      "properties": {
+        "event_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 80
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "side": {
+          "enum": [
+            "LONG",
+            "SHORT"
+          ]
+        },
+        "qty": {
+          "type": "number",
+          "minimum": 0
+        },
+        "entry_price": {
+          "type": "number"
+        },
+        "mark_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "unrealized_pnl": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "stop_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tp1_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "liquidation_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "leverage": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "margin_type": {
+          "enum": [
+            "ISOLATED",
+            "CROSSED",
+            null
+          ]
+        },
+        "is_hedge_book": {
+          "type": "boolean"
+        },
+        "opened_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "time_stop_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "closed_trade": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "symbol",
+        "side",
+        "qty",
+        "opened_at",
+        "closed_at",
+        "entry_price",
+        "exit_price",
+        "stop_price",
+        "tp1_price",
+        "liquidation_price",
+        "r_multiple",
+        "realized_pnl",
+        "fees_funding_usd",
+        "exit_reason"
+      ],
+      "properties": {
+        "event_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 80
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "side": {
+          "enum": [
+            "LONG",
+            "SHORT"
+          ]
+        },
+        "qty": {
+          "type": "number",
+          "minimum": 0
+        },
+        "opened_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "closed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "entry_price": {
+          "type": "number"
+        },
+        "exit_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "stop_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tp1_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "liquidation_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "r_multiple": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "realized_pnl": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "fees_funding_usd": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "exit_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        }
+      }
+    },
+    "order": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "symbol",
+        "leg",
+        "side",
+        "order_type",
+        "price",
+        "qty",
+        "executed_qty",
+        "avg_price",
+        "reduce_only",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "event_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 80
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "leg": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+        },
+        "side": {
+          "enum": [
+            "BUY",
+            "SELL"
+          ]
+        },
+        "order_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "qty": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "executed_qty": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "avg_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "reduce_only": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "trade_stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "closed",
+        "wins",
+        "realized_pnl",
+        "fees_funding_usd",
+        "avg_r"
+      ],
+      "properties": {
+        "closed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wins": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "realized_pnl": {
+          "type": "number"
+        },
+        "fees_funding_usd": {
+          "type": "number"
+        },
+        "avg_r": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gate",
+        "label",
+        "value",
+        "target",
+        "met",
+        "checks",
+        "passed",
+        "decided_at"
+      ],
+      "properties": {
+        "gate": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,20}$"
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "target": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "met": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "checks": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "$ref": "#/$defs/gate_check"
+          }
+        },
+        "passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "decided_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "gate_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "value",
+        "target",
+        "met"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "target": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "met": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scored_30d",
+        "hits_30d"
+      ],
+      "properties": {
+        "scored_30d": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hits_30d": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "as_of",
+        "symbol",
+        "source",
+        "outcome",
+        "manager_size",
+        "p_pooled",
+        "disagreement",
+        "rounds",
+        "unscored",
+        "hit",
+        "label"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "source": {
+          "enum": [
+            "LTX",
+            "MIGRATION",
+            "HOLLOW_HYPE",
+            "HELD"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "LONG",
+            "SHORT",
+            "NO_TRADE",
+            "HOLD",
+            "EXIT"
+          ]
+        },
+        "manager_size": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "p_pooled": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "disagreement": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rounds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "unscored": {
+          "type": "boolean"
+        },
+        "hit": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        }
+      }
+    },
+    "decision_card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "symbol",
+        "as_of",
+        "source",
+        "outcome",
+        "side",
+        "manager_size",
+        "p_pooled",
+        "disagreement",
+        "rounds",
+        "stop_reason",
+        "target_type",
+        "summary",
+        "unscored",
+        "hit",
+        "label",
+        "consensus",
+        "manager_rule",
+        "timeline",
+        "forecasts",
+        "claims",
+        "levels",
+        "trades",
+        "risk",
+        "orders",
+        "usage"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source": {
+          "enum": [
+            "LTX",
+            "MIGRATION",
+            "HOLLOW_HYPE",
+            "HELD"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "LONG",
+            "SHORT",
+            "NO_TRADE",
+            "HOLD",
+            "EXIT"
+          ]
+        },
+        "side": {
+          "enum": [
+            "LONG",
+            "SHORT",
+            null
+          ]
+        },
+        "manager_size": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "p_pooled": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "disagreement": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rounds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "stop_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        },
+        "target_type": {
+          "enum": [
+            "RESID_12H",
+            "RAW_12H"
+          ]
+        },
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4000
+        },
+        "unscored": {
+          "type": "boolean"
+        },
+        "hit": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        },
+        "consensus": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/check"
+          }
+        },
+        "manager_rule": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/check"
+          }
+        },
+        "timeline": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/timeline_entry"
+          }
+        },
+        "forecasts": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "$ref": "#/$defs/forecast"
+          }
+        },
+        "claims": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/claim"
+          }
+        },
+        "levels": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/level"
+          }
+        },
+        "trades": {
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/card_trade"
+          }
+        },
+        "risk": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/risk_result"
+          }
+        },
+        "orders": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/card_order"
+          }
+        },
+        "usage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/usage"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed",
+        "text"
+      ],
+      "properties": {
+        "passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 4000
+        }
+      }
+    },
+    "timeline_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "at",
+        "text",
+        "tone"
+      ],
+      "properties": {
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "tone": {
+          "enum": [
+            "",
+            "pos",
+            "neg",
+            "warn"
+          ]
+        }
+      }
+    },
+    "forecast": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent",
+        "round",
+        "model_slug",
+        "abstain",
+        "p_model",
+        "p_llm",
+        "p_used",
+        "stance",
+        "candidate_id",
+        "weight_norm",
+        "commit_sha256"
+      ],
+      "properties": {
+        "agent": {
+          "type": "string",
+          "pattern": "^[a-z_]{2,32}$"
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "model_slug": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        },
+        "abstain": {
+          "type": "boolean"
+        },
+        "p_model": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "p_llm": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "p_used": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "stance": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        },
+        "candidate_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        },
+        "weight_norm": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "commit_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "round",
+        "shared_id",
+        "kind",
+        "tier",
+        "statement",
+        "verified",
+        "hard",
+        "reject_reason"
+      ],
+      "properties": {
+        "round": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "shared_id": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        },
+        "tier": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        },
+        "statement": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "hard": {
+          "type": "boolean"
+        },
+        "reject_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        }
+      }
+    },
+    "level": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "side",
+        "entry",
+        "invalidation",
+        "tp1",
+        "rr",
+        "chosen"
+      ],
+      "properties": {
+        "candidate_id": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "side": {
+          "enum": [
+            "LONG",
+            "SHORT"
+          ]
+        },
+        "entry": {
+          "type": "number"
+        },
+        "invalidation": {
+          "type": "number"
+        },
+        "tp1": {
+          "type": "number"
+        },
+        "rr": {
+          "type": "number"
+        },
+        "chosen": {
+          "type": "boolean"
+        }
+      }
+    },
+    "card_trade": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "account",
+        "symbol",
+        "side",
+        "opened_at",
+        "closed_at",
+        "entry_price",
+        "exit_price",
+        "stop_price",
+        "tp1_price",
+        "r_multiple",
+        "realized_pnl",
+        "fees_funding_usd",
+        "exit_reason"
+      ],
+      "properties": {
+        "account": {
+          "enum": [
+            "testnet",
+            "live"
+          ]
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "side": {
+          "enum": [
+            "LONG",
+            "SHORT"
+          ]
+        },
+        "opened_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "closed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "entry_price": {
+          "type": "number"
+        },
+        "exit_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "stop_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tp1_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "r_multiple": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "realized_pnl": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "fees_funding_usd": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "exit_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        }
+      }
+    },
+    "risk_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "account",
+        "council_action",
+        "applied_action",
+        "result",
+        "reason",
+        "decided_at"
+      ],
+      "properties": {
+        "account": {
+          "enum": [
+            "testnet",
+            "live"
+          ]
+        },
+        "council_action": {
+          "enum": [
+            "OPEN",
+            "HOLD",
+            "EXIT"
+          ]
+        },
+        "applied_action": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 20
+        },
+        "result": {
+          "enum": [
+            "approved",
+            "rejected",
+            "hold",
+            "ignored"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 300
+        },
+        "decided_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "card_order": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "account",
+        "symbol",
+        "leg",
+        "side",
+        "order_type",
+        "price",
+        "qty",
+        "executed_qty",
+        "avg_price",
+        "reduce_only",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "account": {
+          "enum": [
+            "testnet",
+            "live"
+          ]
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "leg": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+        },
+        "side": {
+          "enum": [
+            "BUY",
+            "SELL"
+          ]
+        },
+        "order_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "qty": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "executed_qty": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "avg_price": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "reduce_only": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cost_usd",
+        "calls",
+        "agents"
+      ],
+      "properties": {
+        "cost_usd": {
+          "type": "number"
+        },
+        "calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "agents": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "agents_view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_type",
+        "agents",
+        "weight_history",
+        "version_changes",
+        "calibration"
+      ],
+      "properties": {
+        "target_type": {
+          "enum": [
+            "RESID_12H",
+            "RAW_12H"
+          ]
+        },
+        "agents": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/agent"
+          }
+        },
+        "weight_history": {
+          "type": "array",
+          "maxItems": 5000,
+          "items": {
+            "$ref": "#/$defs/weight_point"
+          }
+        },
+        "version_changes": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/version_change"
+          }
+        },
+        "calibration": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/calibration"
+          }
+        }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent",
+        "version",
+        "model_slug",
+        "w",
+        "w_capped",
+        "a",
+        "r",
+        "coverage",
+        "forecasts",
+        "log_loss_30d",
+        "rejected_claims_fraction",
+        "llm_cost_30d"
+      ],
+      "properties": {
+        "agent": {
+          "type": "string",
+          "pattern": "^[a-z_]{2,32}$"
+        },
+        "version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "model_slug": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        },
+        "w": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "w_capped": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "a": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "r": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "forecasts": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "log_loss_30d": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rejected_claims_fraction": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "llm_cost_30d": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "weight_point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent",
+        "day",
+        "w"
+      ],
+      "properties": {
+        "agent": {
+          "type": "string",
+          "pattern": "^[a-z_]{2,32}$"
+        },
+        "day": {
+          "type": "string",
+          "format": "date"
+        },
+        "w": {
+          "type": "number"
+        }
+      }
+    },
+    "version_change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent",
+        "version",
+        "at"
+      ],
+      "properties": {
+        "agent": {
+          "type": "string",
+          "pattern": "^[a-z_]{2,32}$"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "calibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent",
+        "computed_at",
+        "spiegelhalter_z",
+        "ece",
+        "n",
+        "bins"
+      ],
+      "properties": {
+        "agent": {
+          "type": "string",
+          "pattern": "^[a-z_]{2,32}$"
+        },
+        "computed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "spiegelhalter_z": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ece": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "n": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "bins": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/calibration_bin"
+          }
+        }
+      }
+    },
+    "calibration_bin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bin_lo",
+        "bin_hi",
+        "n",
+        "mean_p",
+        "observed_rate"
+      ],
+      "properties": {
+        "bin_lo": {
+          "type": "number"
+        },
+        "bin_hi": {
+          "type": "number"
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mean_p": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "observed_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "costs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "today",
+        "last_30d",
+        "daily",
+        "by_pipeline",
+        "by_role",
+        "by_model"
+      ],
+      "properties": {
+        "today": {
+          "$ref": "#/$defs/cost_today"
+        },
+        "last_30d": {
+          "$ref": "#/$defs/cost_30d"
+        },
+        "daily": {
+          "type": "array",
+          "maxItems": 40,
+          "items": {
+            "$ref": "#/$defs/cost_day"
+          }
+        },
+        "by_pipeline": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/cost_pipeline"
+          }
+        },
+        "by_role": {
+          "type": "array",
+          "maxItems": 40,
+          "items": {
+            "$ref": "#/$defs/cost_role"
+          }
+        },
+        "by_model": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/cost_model"
+          }
+        }
+      }
+    },
+    "cost_today": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cost_usd",
+        "calls"
+      ],
+      "properties": {
+        "cost_usd": {
+          "type": "number"
+        },
+        "calls": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cost_30d": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cost_usd",
+        "calls",
+        "council_cost_usd",
+        "council_events"
+      ],
+      "properties": {
+        "cost_usd": {
+          "type": "number"
+        },
+        "calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "council_cost_usd": {
+          "type": "number"
+        },
+        "council_events": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cost_day": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "day",
+        "cost_usd",
+        "calls"
+      ],
+      "properties": {
+        "day": {
+          "type": "string",
+          "format": "date"
+        },
+        "cost_usd": {
+          "type": "number"
+        },
+        "calls": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cost_pipeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pipeline",
+        "cost_usd"
+      ],
+      "properties": {
+        "pipeline": {
+          "enum": [
+            "council",
+            "news",
+            "reflection"
+          ]
+        },
+        "cost_usd": {
+          "type": "number"
+        }
+      }
+    },
+    "cost_role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "models",
+        "calls",
+        "prompt_tokens",
+        "completion_tokens",
+        "cost_usd"
+      ],
+      "properties": {
+        "role": {
+          "type": "string",
+          "pattern": "^[a-z_]{2,40}$"
+        },
+        "models": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "prompt_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completion_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cost_usd": {
+          "type": "number"
+        }
+      }
+    },
+    "cost_model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_slug",
+        "calls",
+        "prompt_tokens",
+        "completion_tokens",
+        "cost_usd"
+      ],
+      "properties": {
+        "model_slug": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "prompt_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completion_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cost_usd": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

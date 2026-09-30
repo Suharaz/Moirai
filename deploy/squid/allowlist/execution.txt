@@ -1,0 +1,5 @@
+# Execution: Binance USDS-M signed REST + user data stream, mainnet and the testnet (demo) endpoints.
+fapi.binance.com
+fstream.binance.com
+demo-fapi.binance.com
+demo-fstream.binance.com

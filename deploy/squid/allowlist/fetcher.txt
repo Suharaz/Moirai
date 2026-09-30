@@ -1,0 +1,14 @@
+# Fetcher: original-article domains of the tiered news sources (config/news_sources.yaml), including
+# subdomains. Unknown domains stay blocked until they are reviewed and added here.
+.binance.com
+.coindesk.com
+.theblock.co
+.decrypt.co
+.cointelegraph.com
+.reuters.com
+.bloomberg.com
+.blockworks.co
+.cryptopanic.com
+.coinmarketcap.com
+.coingecko.com
+.medium.com

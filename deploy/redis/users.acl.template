@@ -1,0 +1,27 @@
+# Redis ACL: one user per service, least privilege on streams. Rendered to deploy/redis/users.acl by
+# scripts/gen_redis_acl.py, which fills each double-brace placeholder from HDT_REDIS_PASSWORD_<USER>.
+#
+# Root permissions let a service consume its streams (XREADGROUP, XACK, XAUTOCLAIM need read + write key
+# access because they update the consumer group; XPENDING reads delivery counts for the poison limit).
+# XADD is granted only inside a selector `( ... )` limited to the streams the service produces. A
+# consumer can only inject into a stream it reads when the design makes it a producer of that stream too
+# (council re-queues `candidates`). Every consumer may XADD `dead_letter`, where unparseable messages
+# are parked.
+# `monitor` (redis-exporter) reads server statistics only: no key, channel or CONFIG access (the
+# exporter runs with --config-command=-).
+# The default user is disabled.
+user default off
+user admin on >{{ADMIN}} ~* &* +@all
+user recorder on >{{RECORDER}} resetkeys resetchannels -@all +ping +hello +client|setname +xreadgroup +xack +xautoclaim +xpending +xgroup|create ~config_changed ~secret_test_request (+xrevrange %R~candidates %R~account_state) (+xadd ~secret_test_result ~dead_letter)
+user council on >{{COUNCIL}} resetkeys resetchannels -@all +ping +hello +client|setname +xreadgroup +xack +xautoclaim +xpending +xgroup|create ~candidates ~config_changed ~secret_test_request (+xrevrange %R~account_state) (+xadd ~candidates ~decisions ~secret_test_result ~dead_letter)
+user news on >{{NEWS}} resetkeys resetchannels -@all +ping +hello +client|setname +xreadgroup +xack +xautoclaim +xpending +xgroup|create ~config_changed ~secret_test_request (+xadd ~candidates ~secret_test_result ~dead_letter)
+user veto_scan on >{{VETO_SCAN}} resetkeys resetchannels -@all +ping +hello +client|setname +xreadgroup +xack +xautoclaim +xpending +xgroup|create ~config_changed (+xadd ~risk_flags ~dead_letter)
+user scorer on >{{SCORER}} resetkeys resetchannels -@all +ping +hello +client|setname +xreadgroup +xack +xautoclaim +xpending +xgroup|create ~config_changed ~secret_test_request (+xadd ~secret_test_result ~dead_letter)
+user risk on >{{RISK}} resetkeys resetchannels -@all +ping +hello +client|setname +xreadgroup +xack +xautoclaim +xpending +xgroup|create +xrevrange ~decisions ~risk_flags ~account_state ~controls ~config_changed (+xadd ~orders ~dead_letter)
+user execution on >{{EXECUTION}} resetkeys resetchannels -@all +ping +hello +client|setname +xreadgroup +xack +xautoclaim +xpending +xgroup|create ~orders ~risk_flags ~controls ~config_changed ~secret_test_request (+xadd ~account_state ~secret_test_result ~dead_letter)
+user testnet_driver on >{{TESTNET_DRIVER}} resetkeys resetchannels -@all +ping +hello +client|setname +xrevrange %R~account_state (+xadd ~orders)
+user configapi on >{{CONFIGAPI}} resetkeys resetchannels -@all +ping +hello +client|setname +xreadgroup +xack +xautoclaim +xpending +xgroup|create ~secret_test_result (+xadd ~config_changed ~secret_test_request ~controls ~dead_letter)
+user console on >{{CONSOLE}} resetkeys resetchannels -@all +ping +hello +client|setname +xrevrange +xrange +xlen %R~account_state %R~risk_flags
+user publisher on >{{PUBLISHER}} resetkeys resetchannels -@all +ping +hello +client|setname +xrevrange %R~account_state
+user telegram on >{{TELEGRAM}} resetkeys resetchannels -@all +ping +hello +client|setname +xreadgroup +xack +xautoclaim +xpending +xgroup|create ~config_changed ~secret_test_request (+xadd ~secret_test_result ~controls ~dead_letter)
+user monitor on >{{MONITOR}} resetkeys resetchannels -@all +ping +hello +client|setname +info +slowlog|get +slowlog|len +latency|latest +latency|histogram +command|info

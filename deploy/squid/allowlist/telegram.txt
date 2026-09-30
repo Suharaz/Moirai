@@ -1,0 +1,2 @@
+# Telegram bot API.
+api.telegram.org

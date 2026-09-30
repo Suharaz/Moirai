@@ -1,0 +1,70 @@
+# Development infrastructure only: Postgres 16 (WAL archiving on) + Redis 7 (AOF everysec, per-service ACL).
+# Usage: uv run python scripts/gen_redis_acl.py && docker compose --env-file .env -f docker-compose.dev.yml up -d
+# The dev WAL archive lives in the container filesystem and exists only to exercise archive_command;
+# production PITR (phase 10) archives to a dedicated volume with encrypted off-site copies.
+name: hdt-dev
+
+services:
+  postgres:
+    image: postgres:16.13@sha256:71e27bf60b70bded003791b5573f8b808365613f341df20ffcf0c1ed7bc13ddf
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: hdt
+      HDT_PG_PASSWORD_MIGRATOR: ${HDT_PG_PASSWORD_MIGRATOR:?}
+      HDT_PG_PASSWORD_RECORDER: ${HDT_PG_PASSWORD_RECORDER:?}
+      HDT_PG_PASSWORD_COUNCIL: ${HDT_PG_PASSWORD_COUNCIL:?}
+      HDT_PG_PASSWORD_SCORER: ${HDT_PG_PASSWORD_SCORER:?}
+      HDT_PG_PASSWORD_RISK: ${HDT_PG_PASSWORD_RISK:?}
+      HDT_PG_PASSWORD_EXECUTION: ${HDT_PG_PASSWORD_EXECUTION:?}
+      HDT_PG_PASSWORD_NEWS: ${HDT_PG_PASSWORD_NEWS:?}
+      HDT_PG_PASSWORD_VETO_SCAN: ${HDT_PG_PASSWORD_VETO_SCAN:?}
+      HDT_PG_PASSWORD_CONFIGAPI: ${HDT_PG_PASSWORD_CONFIGAPI:?}
+      HDT_PG_PASSWORD_CONSOLE_RO: ${HDT_PG_PASSWORD_CONSOLE_RO:?}
+      HDT_PG_PASSWORD_PUBLISHER_RO: ${HDT_PG_PASSWORD_PUBLISHER_RO:?}
+      HDT_PG_PASSWORD_TELEGRAM: ${HDT_PG_PASSWORD_TELEGRAM:?}
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=mkdir -p /var/lib/postgresql/wal_archive && test ! -f /var/lib/postgresql/wal_archive/%f && cp %p /var/lib/postgresql/wal_archive/%f
+      - -c
+      - max_connections=300
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./deploy/postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hdt"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7.4.8@sha256:3e0669e42d4fe421c9dea0ba5fbc04d336b80b4f32a6c7d25bee3a1d089288a1
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --aclfile
+      - /etc/redis/users.acl
+    volumes:
+      - redis_data:/data
+      - ./deploy/redis/users.acl:/etc/redis/users.acl:ro
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --user admin --pass \"$$(grep -o '^user admin on >[^ ]*' /etc/redis/users.acl | cut -d'>' -f2)\" --no-auth-warning ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pg_data:
+  redis_data:

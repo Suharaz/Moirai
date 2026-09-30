@@ -1,0 +1,44 @@
+# Per-agent, per-target p_model coefficients: config/p_model/<agent>.<target_type>.yaml (labels are never
+# pooled across target types). Written by scripts/fit_p_model.py as a new versioned file, promoted by review.
+schema_version: 1
+agent: crowding
+p_model_ver: crowding-resid_12h-pm0
+target_type: RESID_12H
+label_spec_version: lbl1
+fit_window_start: null
+fit_window_end: null
+sample_count: 0
+oos_logloss: null
+intercept: 0.0
+coefficients:
+  skew_4h: 0.0
+  spike: 0.0
+  decay: 0.0
+  fdz: 0.0
+  doi_4h: 0.0
+  funding_drop: 0.0
+  s_p: 0.0
+  zm: 0.0
+  g: 0.0
+  bg: 0.0
+  oi_hhi: 0.0
+standardization:                # identity until the first fit (no lake samples yet)
+  skew_4h: {mean: 0.0, std: 1.0}
+  spike: {mean: 0.0, std: 1.0}
+  decay: {mean: 0.0, std: 1.0}
+  fdz: {mean: 0.0, std: 1.0}
+  doi_4h: {mean: 0.0, std: 1.0}
+  funding_drop: {mean: 0.0, std: 1.0}
+  s_p: {mean: 0.0, std: 1.0}
+  zm: {mean: 0.0, std: 1.0}
+  g: {mean: 0.0, std: 1.0}
+  bg: {mean: 0.0, std: 1.0}
+  oi_hhi: {mean: 0.0, std: 1.0}
+families:
+  ltx: [skew_4h, spike, decay, fdz, doi_4h, funding_drop]
+  migration: [s_p, zm, g, bg, oi_hhi]
+shrunk_families: [ltx, migration]
+note: >-
+  Not fitted: gate G1 has not run on the recorded lake yet, so every feature family lacks data and
+  all coefficients are shrunk to 0 (p_model = sigmoid(0) = 0.5, the uninformed base rate). The first
+  fit (scripts/fit_p_model.py, L2 logistic, walk-forward) writes a new versioned file for review.

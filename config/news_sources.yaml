@@ -1,0 +1,30 @@
+# Source tiers (Design Contract sections 2, 10). The tier of a url claim is computed by code from the final
+# domain after redirects; LLM-declared tiers are ignored. Unknown domains default to T3.
+# T0 official (exchange announcements, official project channels, on-chain), T1 major outlets,
+# T2 aggregators and KOL platforms. Listing T0 comes only from recorded Binance announcements.
+schema_version: 1
+tiers:
+  T0:
+    - binance.com
+    - www.binance.com
+  T1:
+    - coindesk.com
+    - www.coindesk.com
+    - theblock.co
+    - www.theblock.co
+    - decrypt.co
+    - cointelegraph.com
+    - www.reuters.com
+    - www.bloomberg.com
+    - blockworks.co
+  T2:
+    - cryptopanic.com
+    - coinmarketcap.com
+    - www.coingecko.com
+    - x.com
+    - twitter.com
+    - medium.com
+official_listing_domains:
+  - www.binance.com
+  - binance.com
+default_tier: T3

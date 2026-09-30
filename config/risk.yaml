@@ -1,0 +1,47 @@
+# Risk and execution defaults. Hard ceilings live in src/hdt/settings/ceilings.py; values here may only be
+# tighter. Market data staleness uses the single key data.stale_s in settings.yaml.
+schema_version: 1
+
+risk_pct: 0.005                   # risk per trade (fraction of equity)
+leverage_max: 3                   # isolated
+max_positions: 4                  # hedge book excluded
+max_positions_per_coin: 1
+same_direction_risk_max: 0.015    # including the BTC hedge book
+daily_loss_kill: -0.02            # per namespace, UTC day
+
+max_margin_pct: 0.03              # margin per position <= 3 % of equity (bounds gap losses)
+max_oi_frac: 0.005                # notional <= 0.5 % of coin open interest
+max_volume_1h_frac: 0.02          # notional <= 2 % of 1 h volume
+max_positions_per_narrative: 2    # by CMC categories
+liq_distance_mult: 1.5            # liquidation farther than the stop by >= 1.5x the stop distance
+mmr_assumed: 0.01                 # conservative maintenance margin rate for the liquidation estimate
+min_rr: 1.5
+max_entry_distance_atr: 1.5       # candidate entry within 1.5 ATR of mark
+
+account_state_max_age_s: 30
+veto_scan_interval_s: 300         # news veto scan cycle (phase 07)
+post_only_wait_s: 180             # GTX entry wait before cancel-confirm + IOC
+ioc_max_slippage: 0.001           # entry_ioc limit = entry +- 0.1 %
+tp1_fraction: 0.5
+trail_atr_mult: 1.0
+stop_place_max_attempts: 2        # then close market reduceOnly
+reconcile_interval_s: 30
+account_state_interval_s: 5
+listen_key_keepalive_s: 2400      # 40 minutes (30-50 minute window)
+paper_starting_equity_usd: 10000  # paper wallet when the paper namespace is first initialized (applied once)
+price_crosscheck_max_dev: 0.02   # CMC WS price vs Binance mark of a held coin: above 2 % alerts (never kills)
+
+size_multiplier:
+  paper: 1.0                      # paper measures the strategy at full size for gate G4
+  testnet: 1.0
+  live: 0.25
+
+hedge:
+  rebalance_threshold_frac: 0.2   # rebalance when |target - current| > 20 % of target ...
+  rebalance_min_notional_mult: 1.0  # ... and above 1x minNotional
+  stop_atr_mult: 3.0              # book stop at 3x BTC 1 h ATR
+
+fees:
+  maker: 0.0002
+  taker: 0.0005
+  slippage_bp: 2

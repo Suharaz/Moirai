@@ -1,0 +1,433 @@
+# CoinMarketCap routes: 29 REST + 1 WebSocket (catalog: visuals/ai-trading-flow.html section 02).
+# Every enabled route has a named consumer (producer/consumer matrix in docs/system-architecture.md).
+# `keyless` and `min_plan` labels come from the docs and pricing page and must be confirmed with a real
+# call (docs/api-endpoints-design.md section 6). `shed_class` drives the credit governor: context and DEX
+# are shed first, derivatives last. `est_credits_month` is the design estimate (Design Contract section 7).
+schema_version: 1
+routes:
+  # ---------------------------------------------------------------- derivatives (latest only)
+  - id: 1
+    name: derivatives_exchanges
+    path: /v5/exchange/derivatives/list
+    transport: rest
+    schedule: interval
+    cadence_s: 3600
+    group: core
+    keyless: false
+    min_plan: basic
+    shed_class: derivatives
+    consumers: [crowding]
+    enabled: true
+    est_credits_month: 720
+    params: {}
+  - id: 2
+    name: exchange_derivative_market_pairs
+    path: /v5/exchange/derivatives/market-pairs/list/latest
+    transport: rest
+    schedule: interval
+    cadence_s: 300
+    group: core
+    keyless: false
+    min_plan: basic
+    shed_class: derivatives
+    consumers: [crowding]
+    enabled: true
+    est_credits_month: 92160
+    params:
+      core_exchanges: 4           # top by liquidity_score from route 1 (point-in-time, re-ranked monthly)
+      peripheral_exchanges: 4
+      core_cadence_s: 300
+      peripheral_cadence_s: 900
+  - id: 3
+    name: crypto_derivative_market_pairs
+    path: /v5/cryptocurrency/derivatives/market-pairs/list/latest
+    transport: rest
+    schedule: interval
+    cadence_s: 900
+    group: core
+    keyless: false
+    min_plan: basic
+    shed_class: derivatives
+    consumers: [crowding, news]
+    enabled: true
+    est_credits_month: 57600
+    params:
+      watchlist_coins: 20
+  - id: 4
+    name: total_liquidations
+    path: /v5/derivatives/liquidations/quotes/latest
+    transport: rest
+    schedule: interval
+    cadence_s: 300
+    group: core
+    keyless: false
+    min_plan: basic
+    shed_class: derivatives
+    consumers: [crowding, macro]
+    enabled: true
+    est_credits_month: 8640
+    params: {}
+  - id: 5
+    name: liquidations_by_exchange
+    path: /v5/derivatives/liquidations/exchange/list/latest
+    transport: rest
+    schedule: interval
+    cadence_s: 300
+    group: core
+    keyless: false
+    min_plan: basic
+    shed_class: derivatives
+    consumers: [crowding]
+    enabled: true
+    est_credits_month: 8640
+    params: {}
+  - id: 6
+    name: liquidations_by_crypto
+    path: /v5/derivatives/liquidations/cryptocurrency/list/latest
+    transport: rest
+    schedule: interval
+    cadence_s: 60
+    group: core
+    keyless: false
+    min_plan: basic
+    shed_class: derivatives
+    consumers: [crowding, news]
+    enabled: true
+    est_credits_month: 43200
+    params: {}
+  # ---------------------------------------------------------------- price and technicals
+  - id: 7
+    name: ohlcv_historical
+    path: /v2/cryptocurrency/ohlcv/historical
+    transport: rest
+    schedule: interval
+    cadence_s: 3600
+    group: core
+    keyless: false
+    min_plan: startup
+    shed_class: price
+    consumers: [technical]
+    enabled: true
+    est_credits_month: 1500
+    params:
+      time_period: hourly
+      interval: hourly            # sampling step; CMC's default `daily` returns only each day's 00:00 bar
+  - id: 8
+    name: quotes_latest
+    path: /v3/cryptocurrency/quotes/latest
+    transport: rest
+    schedule: interval
+    cadence_s: 300
+    group: core
+    keyless: false
+    min_plan: basic
+    shed_class: price
+    consumers: [technical, fundamental, reconcile]
+    enabled: true
+    est_credits_month: 8640
+    params: {}
+  - id: 9
+    name: quotes_historical
+    path: /v3/cryptocurrency/quotes/historical
+    transport: rest
+    schedule: once
+    group: backfill
+    keyless: false
+    min_plan: basic
+    shed_class: price
+    consumers: [technical]
+    enabled: true
+    est_credits_month: 2000
+    params:
+      interval: 5m
+  - id: 10
+    name: price_performance_stats
+    path: /v2/cryptocurrency/price-performance-stats/latest
+    transport: rest
+    schedule: daily
+    group: core
+    keyless: false
+    min_plan: startup
+    shed_class: price
+    consumers: [technical]
+    enabled: true
+    est_credits_month: 100
+    params:
+      time_period: all_time,365d,90d,30d,7d
+  - id: 11
+    name: listings_latest
+    path: /v3/cryptocurrency/listings/latest
+    transport: rest
+    schedule: interval
+    cadence_s: 3600
+    group: core
+    keyless: true
+    min_plan: basic
+    shed_class: price
+    consumers: [universe]
+    enabled: true
+    est_credits_month: 2160        # 720 calls x 3 credits (CMC bills listings per 200 rows, limit 500)
+    params:
+      limit: 500
+  - id: 12
+    name: crypto_map
+    path: /v1/cryptocurrency/map
+    transport: rest
+    schedule: daily
+    group: core
+    keyless: true
+    min_plan: basic
+    shed_class: system
+    consumers: [symbol_map]
+    enabled: true
+    est_credits_month: 30
+    params: {}
+  # ---------------------------------------------------------------- attention
+  - id: 13
+    name: trending_latest
+    path: /v1/cryptocurrency/trending/latest
+    transport: rest
+    schedule: interval
+    cadence_s: 900
+    group: core
+    keyless: false
+    min_plan: startup
+    shed_class: attention
+    consumers: [news]
+    enabled: true
+    est_credits_month: 2880
+    params: {}
+  - id: 14
+    name: trending_gainers_losers
+    path: /v1/cryptocurrency/trending/gainers-losers
+    transport: rest
+    schedule: interval
+    cadence_s: 900
+    group: core
+    keyless: false
+    min_plan: startup
+    shed_class: attention
+    consumers: [news, technical]
+    enabled: true
+    est_credits_month: 2880
+    params: {}
+  - id: 15
+    name: listings_new
+    path: /v1/cryptocurrency/listings/new
+    transport: rest
+    schedule: interval
+    cadence_s: 3600
+    group: core
+    keyless: false
+    min_plan: startup
+    shed_class: attention
+    consumers: [news, fundamental]
+    enabled: true
+    est_credits_month: 720
+    params: {}
+  # ---------------------------------------------------------------- macro context
+  - id: 16
+    name: fear_greed_latest
+    path: /v3/fear-and-greed/latest
+    transport: rest
+    schedule: interval
+    cadence_s: 900
+    group: core
+    keyless: true
+    min_plan: basic
+    shed_class: context
+    consumers: [macro]
+    enabled: true
+    est_credits_month: 2880
+    params: {}
+  - id: 17
+    name: fear_greed_historical
+    path: /v3/fear-and-greed/historical
+    transport: rest
+    schedule: once
+    group: backfill
+    keyless: true
+    min_plan: basic
+    shed_class: context
+    consumers: [macro]
+    enabled: true
+    est_credits_month: 50
+    params: {}
+  - id: 18
+    name: altcoin_season_latest
+    path: /v1/altcoin-season-index/latest
+    transport: rest
+    schedule: interval
+    cadence_s: 900
+    group: core
+    keyless: true
+    min_plan: basic
+    shed_class: context
+    consumers: [macro]
+    enabled: true
+    est_credits_month: 2880
+    params: {}
+  - id: 19
+    name: altcoin_season_historical
+    path: /v1/altcoin-season-index/historical
+    transport: rest
+    schedule: once
+    group: backfill
+    keyless: true
+    min_plan: basic
+    shed_class: context
+    consumers: [macro]
+    enabled: true
+    est_credits_month: 50
+    params: {}
+  - id: 20
+    name: global_metrics_latest
+    path: /v1/global-metrics/quotes/latest
+    transport: rest
+    schedule: interval
+    cadence_s: 300
+    group: core
+    keyless: true
+    min_plan: basic
+    shed_class: context
+    consumers: [macro]
+    enabled: true
+    est_credits_month: 8640
+    params: {}
+  - id: 21
+    name: cmc20_latest
+    path: /v3/index/cmc20-latest
+    transport: rest
+    schedule: interval
+    cadence_s: 900
+    group: core
+    keyless: true
+    min_plan: basic
+    shed_class: context
+    consumers: [macro]
+    enabled: true
+    est_credits_month: 2880
+    params: {}
+  - id: 22
+    name: cmc100_latest
+    path: /v3/index/cmc100-latest
+    transport: rest
+    schedule: interval
+    cadence_s: 900
+    group: core
+    keyless: true
+    min_plan: basic
+    shed_class: context
+    consumers: [macro]
+    enabled: true
+    est_credits_month: 2880
+    params: {}
+  - id: 23
+    name: categories
+    path: /v1/cryptocurrency/categories
+    transport: rest
+    schedule: interval
+    cadence_s: 3600
+    group: core
+    keyless: false
+    min_plan: basic
+    shed_class: context
+    consumers: [macro, fundamental, risk_narrative]
+    enabled: true
+    est_credits_month: 1440
+    params: {}
+  # ---------------------------------------------------------------- fundamentals, DEX, exchange risk
+  - id: 24
+    name: dex_security_detail
+    path: /v1/dex/security/detail
+    transport: rest
+    schedule: on_event
+    group: core
+    keyless: true
+    min_plan: basic
+    shed_class: dex
+    consumers: [fundamental, news]
+    enabled: true
+    est_credits_month: 3000
+    params: {}
+  - id: 25
+    name: dex_token_pools
+    path: /v1/dex/token/pools
+    transport: rest
+    schedule: on_event
+    group: core
+    keyless: true
+    min_plan: basic
+    shed_class: dex
+    consumers: [fundamental]
+    enabled: true
+    est_credits_month: 2000
+    params: {}
+  - id: 26
+    name: dex_liquidity_change
+    path: /v1/dex/liquidity-change/list
+    transport: rest
+    schedule: on_event
+    group: core
+    keyless: true
+    min_plan: basic
+    shed_class: dex
+    consumers: [fundamental, news]
+    enabled: true
+    est_credits_month: 1500
+    params: {}
+  - id: 27
+    name: dex_holders
+    path: /v1/dex/holders/list
+    transport: rest
+    schedule: daily
+    group: core
+    keyless: true
+    min_plan: basic
+    shed_class: dex
+    consumers: [fundamental]
+    enabled: true
+    est_credits_month: 1000
+    params: {}
+  - id: 28
+    name: exchange_assets
+    path: /v1/exchange/assets
+    transport: rest
+    schedule: daily
+    group: core
+    keyless: false
+    min_plan: basic
+    shed_class: context
+    consumers: [macro]
+    enabled: true
+    est_credits_month: 240
+    params: {}
+  # ---------------------------------------------------------------- system and streaming
+  - id: 29
+    name: key_info
+    path: /v1/key/info
+    transport: rest
+    schedule: interval
+    cadence_s: 3600
+    group: core
+    keyless: false
+    min_plan: basic
+    shed_class: system
+    consumers: [credit_meter]
+    enabled: true
+    est_credits_month: 0
+    params: {}
+  - id: 30
+    name: ws_crypto_latest_price
+    path: market@crypto_latest_price
+    transport: ws
+    schedule: stream
+    group: optional
+    keyless: false
+    min_plan: startup
+    shed_class: price
+    consumers: [risk_price_crosscheck]
+    enabled: false                # enabled via config only while positions are held (<= 5 coins)
+    est_credits_month: 64800
+    params:
+      max_coins: 5

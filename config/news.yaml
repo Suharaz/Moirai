@@ -1,0 +1,151 @@
+# Phase 07 news evidence pipeline: static defaults (versioned file). Changing a rule value requires a new
+# `rule_version` (it is stamped on every verdict, assessment and HOLLOW_HYPE candidate).
+#
+# Sources: the full-text news feed and the unlock calendar are NOT selected yet (owner decision pending,
+# docs/api-endpoints-design.md). Every adapter below is generic and config-driven; a source is enabled only
+# after its license is confirmed to allow internal storage, it has `published_at`, and its items map to
+# coins (explicit symbols or self-mapped by symbol + name). Its host must also be added to
+# deploy/squid/allowlist/news.txt. Binance announcements are the only T0 listing source.
+schema_version: 1
+rule_version: news-v1
+
+ingest:
+  poll_s: 120                    # feed / API / announcement polling cadence
+  request_timeout_s: 20
+  max_response_bytes: 5000000
+  max_entries_per_source: 100    # newest entries parsed per poll
+  content_max_chars: 20000       # stored item text (title + summary + content)
+  near_duplicate_jaccard: 0.8    # MinHash threshold for rewritten articles
+  near_duplicate_window_h: 48
+  process_batch: 20              # items sent through extractor + judges per cycle
+  process_lookback_h: 24         # unprocessed items older than this are skipped (stale)
+  llm_text_max_chars: 8000       # article text inside the labeled prompt data field
+
+feeds:
+  # RSS / Atom feeds of major outlets. Disabled until the license review (see the header).
+  - key: coindesk
+    url: https://www.coindesk.com/arc/outboundfeeds/rss/
+    source_name: CoinDesk
+    enabled: false
+  - key: cointelegraph
+    url: https://cointelegraph.com/rss
+    source_name: Cointelegraph
+    enabled: false
+  - key: decrypt
+    url: https://decrypt.co/feed
+    source_name: Decrypt
+    enabled: false
+  - key: theblock
+    url: https://www.theblock.co/rss.xml
+    source_name: The Block
+    enabled: false
+
+news_api:
+  # Licensed JSON news API (key: vault scope `data`, secret `news_feed`, field `api_key`).
+  enabled: false
+  key: news_api
+  source_name: Licensed news API
+  url: null                      # set together with the selected provider
+  auth_header: X-API-Key
+  query: {}
+  items_path: [data]
+  fields:
+    id: id
+    title: title
+    url: url
+    published_at: published_at
+    summary: summary
+    content: body
+    symbols: symbols
+
+unlock_calendar:
+  # Token unlock calendar as a JSON document (field mapping below). `tier` is the source tier of its
+  # entries: T0 only for an official / on-chain vesting source.
+  enabled: false
+  key: unlock_calendar
+  url: null                      # set together with the selected provider
+  auth: none                     # none | news_feed (vault data/news_feed api_key in `auth_header`)
+  auth_header: X-API-Key
+  tier: T1
+  items_path: [data]
+  fields:
+    coin_id: cmc_id
+    symbol: symbol
+    unlock_at: unlock_date
+    amount_tokens: amount
+    pct_of_circulating: pct_of_circulating
+    category: category
+
+binance_announcements:
+  enabled: true
+  url: https://www.binance.com/bapi/composite/v1/public/cms/article/list/query
+  article_url: https://www.binance.com/en/support/announcement/{code}
+  page_size: 20
+  catalogs:
+    48: listing
+    161: delist
+
+attention:
+  cadence_s: 900                 # matches CMC trending_latest (route 13)
+  top_new: 10                    # New_i: in the top 10 now ...
+  prior_outside: 30              # ... and outside the top 30 24 h earlier
+  prior_lookback_h: 24
+  roll_window_h: 24              # Roll_i: share of trending snapshots in the top 10 over this window
+  news_window_h: 6               # NewsZ_i: articles in 6 h / average 6 h count over the baseline
+  news_baseline_days: 7
+  news_baseline_floor: 0.25      # floor of the 6 h baseline average (no division by ~0)
+  news_z_min: 3.0                # attention when NewsZ_i >= this, or New_i
+
+modes:
+  window_h: 24                   # verdicts considered for an assessment
+  hollow_classes: [RUMOR, KOL_MEME, CIRCULAR]
+  fade_hype_hardness_max: 0.3
+  fade_hype_zf_min: 2.0
+  fade_hype_doi4_min: 0.15       # 4 h open interest change (fraction)
+  squeeze_ratio: 2.0             # squeeze when short_liq_1h >= 2 x long_liq_1h
+  fade_panic_zf_max: -2.0
+  refute_window_min: 60          # a liquidity capture recorded within N minutes after the panic news ...
+  incident_lookback_h: 24        # ... showing no incident since N hours before the news (a drain just before counts)
+  ride_hardness_min: 0.7
+  ride_novelty_min: 0.7
+  ride_max_age_h: 2
+  crowd_z: 1.0                   # crowd LONG when zF >= this, SHORT when zF <= -this
+  p_fade_hype: 0.40
+  p_fade_panic: 0.60
+  p_ride_up: 0.62                # ride down uses 1 - p_ride_up
+  onchain_drain_usd_min: 250000  # recorded DEX liquidity removals above this mean an incident
+  third_party_t0_domains:        # T0 domains independent of any coin project (exchanges)
+    - binance.com
+    - www.binance.com
+  project_domains:               # CMC id -> the coin's own project domains (never a third-party denial)
+    1839: [binance.com, www.binance.com]   # BNB: Binance is the project itself
+
+candidates:
+  max_per_day: 20
+  min_spacing_h: 12              # one HOLLOW_HYPE candidate per coin per 12 h window
+
+veto:
+  window_h: 24                   # bad-catalyst verdicts considered
+  expires_cycles: 3              # flags expire after 3 scan cycles (risk ages them on scan_fresh_at)
+  soft_size_mult: 0.5
+  unlock_ahead_h: 72
+  unlock_large_pct: 2.0          # % of circulating supply
+  source_max_age_s: 900          # required source older than this ages scan_fresh_at
+  required_sources: [binance_announcements]
+  judge_pending_max: 20          # unjudged bad-catalyst items the scan judges itself per cycle
+  prefilter_keywords:
+    - hack
+    - hacked
+    - exploit
+    - exploited
+    - drained
+    - attack
+    - breach
+    - stolen
+    - rug
+    - delist
+    - delisting
+    - delisted
+    - unlock
+    - insolvent
+    - halt

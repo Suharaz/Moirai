@@ -1,0 +1,46 @@
+# Binance USDS-M static defaults. The legacy /ws and /stream WebSocket URLs were discontinued on 2026-04-23.
+schema_version: 1
+
+live:
+  rest: https://fapi.binance.com
+  ws_public: wss://fstream.binance.com/public
+  ws_market: wss://fstream.binance.com/market
+  ws_private: wss://fstream.binance.com/private
+demo:                              # testnet; WS path routing on the demo host must be probed (phase 09)
+  rest: https://demo-fapi.binance.com
+  ws_public: wss://demo-fstream.binance.com/public
+  ws_market: wss://demo-fstream.binance.com/market
+  ws_private: wss://demo-fstream.binance.com/private
+
+recv_window_ms: 5000
+request_timeout_s: 10
+
+cmc_universe_top: 500              # listings/latest top N intersected with Binance perps
+universe_top_n_by_oi: 100          # LTX cross-section
+ltx_universe_size: 100
+watchlist_size: 20                 # CMC route 3 coins
+banned_symbols: []
+
+symbol_overrides:                  # Binance contracts quoted per 1000 units of the base coin
+  - {binance_symbol: 1000PEPEUSDT, cmc_symbol: PEPE, multiplier: 1000}
+  - {binance_symbol: 1000SHIBUSDT, cmc_symbol: SHIB, multiplier: 1000}
+  - {binance_symbol: 1000BONKUSDT, cmc_symbol: BONK, multiplier: 1000}
+  - {binance_symbol: 1000FLOKIUSDT, cmc_symbol: FLOKI, multiplier: 1000}
+  - {binance_symbol: 1000LUNCUSDT, cmc_symbol: LUNC, multiplier: 1000}
+  - {binance_symbol: 1000XECUSDT, cmc_symbol: XEC, multiplier: 1000}
+  - {binance_symbol: 1000SATSUSDT, cmc_symbol: SATS, multiplier: 1000}
+  - {binance_symbol: 1000RATSUSDT, cmc_symbol: RATS, multiplier: 1000}
+  - {binance_symbol: 1000CATUSDT, cmc_symbol: CAT, multiplier: 1000}
+  - {binance_symbol: 1MBABYDOGEUSDT, cmc_symbol: BABYDOGE, multiplier: 1000000}
+
+kline_intervals: [5m, 15m]
+depth_levels: 20
+depth_snapshot_interval_s: 1
+ws_reconnect_before_s: 85800       # reconnect before the 24 h connection limit
+ws_batch_flush_s: 1
+
+universe_retry:                    # same-day rebuilds while today's universe is absent (startup and 00:05 UTC)
+  max_attempts: 6
+  backoff_s: 60                    # 60, 120, 240, 480, 960 s (+ jitter)
+  backoff_max_s: 1800
+  jitter_frac: 0.2

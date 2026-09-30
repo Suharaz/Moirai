@@ -1,0 +1,50 @@
+# Per-agent, per-target p_model coefficients: config/p_model/<agent>.<target_type>.yaml (labels are never
+# pooled across target types). Written by scripts/fit_p_model.py as a new versioned file, promoted by review.
+schema_version: 1
+agent: technical
+p_model_ver: technical-resid_12h-pm0
+target_type: RESID_12H
+label_spec_version: lbl1
+fit_window_start: null
+fit_window_end: null
+sample_count: 0
+oos_logloss: null
+intercept: 0.0
+coefficients:
+  1h_close_vs_ema50_atr: 0.0
+  4h_close_vs_ema50_atr: 0.0
+  1h_structure: 0.0
+  4h_adx14_last: 0.0
+  4h_di_diff: 0.0
+  15m_rsi14_last: 0.0
+  1h_rsi14_last: 0.0
+  1h_macd_hist_slope_atr: 0.0
+  1h_stochrsi_k_last: 0.0
+  1h_rsi_divergence: 0.0
+  4h_rsi_divergence: 0.0
+  ath_distance: 0.0
+  perf_30d: 0.0
+standardization:                # identity until the first fit (no lake samples yet)
+  1h_close_vs_ema50_atr: {mean: 0.0, std: 1.0}
+  4h_close_vs_ema50_atr: {mean: 0.0, std: 1.0}
+  1h_structure: {mean: 0.0, std: 1.0}
+  4h_adx14_last: {mean: 0.0, std: 1.0}
+  4h_di_diff: {mean: 0.0, std: 1.0}
+  15m_rsi14_last: {mean: 0.0, std: 1.0}
+  1h_rsi14_last: {mean: 0.0, std: 1.0}
+  1h_macd_hist_slope_atr: {mean: 0.0, std: 1.0}
+  1h_stochrsi_k_last: {mean: 0.0, std: 1.0}
+  1h_rsi_divergence: {mean: 0.0, std: 1.0}
+  4h_rsi_divergence: {mean: 0.0, std: 1.0}
+  ath_distance: {mean: 0.0, std: 1.0}
+  perf_30d: {mean: 0.0, std: 1.0}
+families:
+  trend: [1h_close_vs_ema50_atr, 4h_close_vs_ema50_atr, 1h_structure, 4h_adx14_last, 4h_di_diff]
+  momentum: [15m_rsi14_last, 1h_rsi14_last, 1h_macd_hist_slope_atr, 1h_stochrsi_k_last]
+  divergence: [1h_rsi_divergence, 4h_rsi_divergence]
+  ath_distance: [ath_distance, perf_30d]
+shrunk_families: [trend, momentum, divergence, ath_distance]
+note: >-
+  Not fitted: gate G1 has not run on the recorded lake yet, so every feature family lacks data and
+  all coefficients are shrunk to 0 (p_model = sigmoid(0) = 0.5, the uninformed base rate). The first
+  fit (scripts/fit_p_model.py, L2 logistic, walk-forward) writes a new versioned file for review.

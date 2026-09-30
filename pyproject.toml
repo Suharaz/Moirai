@@ -1,0 +1,117 @@
+[project]
+name = "hdt"
+version = "0.1.0"
+description = "AI council for crypto perpetual futures trading: CoinMarketCap signal layer, Binance USDS-M execution layer"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "Proprietary" }
+dependencies = [
+    "alembic>=1.20,<1.21",
+    "altair>=5.5,<6",
+    "apscheduler>=3.11,<4",
+    "argon2-cffi>=25.1,<26",
+    "datasketch>=2.0,<2.1",
+    "duckdb>=1.5,<1.6",
+    "fastapi>=0.141,<0.142",
+    "httpx>=0.28,<0.29",
+    "jsonschema>=4.25,<5",
+    "langfuse>=4.15,<5",
+    "langgraph>=1.2.12,<1.3",
+    "langgraph-checkpoint-postgres>=3.1.2,<3.2",
+    "lightgbm>=4.7,<4.8",
+    "numpy>=2.2,<3",
+    "openai>=3.19,<4",
+    "plotly>=6.3,<7",
+    "polars>=1.44,<1.45",
+    "prometheus-client>=0.23,<1",
+    "psycopg[binary,pool]>=3.3,<3.4",
+    "pyarrow>=25,<26",
+    "pydantic>=2.13,<2.14",
+    "pydantic-settings>=2.11,<3",
+    "pynacl>=1.6,<1.7",
+    "pyotp>=2.9,<3",
+    "pyyaml>=6.0.2,<7",
+    "redis>=8.1,<9",
+    "scikit-learn>=1.9,<1.10",
+    "sqlalchemy>=2.1,<2.2",
+    "streamlit>=1.64,<1.65",
+    "ta-lib>=0.8.1,<0.9",
+    "uvicorn[standard]>=0.37,<1",
+    "websockets>=15.0,<17",
+    "zstandard>=0.25,<1",
+]
+
+[project.scripts]
+hdt-kill = "hdt.execution.kill_cli:cli"
+
+[dependency-groups]
+dev = [
+    "detect-secrets>=1.5,<2",
+    "hypothesis>=6.168,<7",
+    "mypy>=1.18,<2",
+    "pip-audit>=2.9,<3",
+    "pre-commit>=4.3,<5",
+    "pytest>=9.0.3,<10",
+    "pytest-asyncio>=1.2,<2",
+    "respx>=0.22,<0.23",
+    "ruff>=0.14,<1",
+    "types-pyyaml>=6.0,<7",
+]
+# Installed only into the sandboxed fetcher image (services/fetcher), never into trading services.
+fetcher = [
+    "trafilatura>=2.2,<2.3",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hdt"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF", "N", "PT", "DTZ"]
+ignore = ["S101"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI declares dependencies and query parameters as argument defaults by design.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S311", "S608"]
+# The console stylesheet is CSS data embedded in a Python string; wrapping selectors hurts readability.
+"src/hdt/console/theme.py" = ["E501"]
+"src/hdt/db/migrations/**" = ["N999"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src/hdt"]
+plugins = ["pydantic.mypy"]
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["hdt.core.*", "hdt.council.*", "hdt.scoring.*", "hdt.risk.*", "hdt.contracts.*", "hdt.settings.ceilings"]
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers -m 'not network and not perf'"
+asyncio_mode = "auto"
+markers = [
+    "pg: needs the dev Postgres (docker compose -f docker-compose.dev.yml up -d)",
+    "redis: needs the dev Redis",
+    "integration: multi-component test",
+    "network: calls live external APIs (deselected by default)",
+    "testnet: runs against the Binance demo-fapi testnet (skipped without HDT_TESTNET_API_KEY / HDT_TESTNET_API_SECRET)",
+    "docker: needs a local Docker engine (skipped when docker is absent)",
+    "perf: wall-clock benchmark against the dev stack (deselected by default; run with -m perf)",
+]

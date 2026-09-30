@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moirai | An AI council that spins, measures and cuts every trade</title>
+<meta name="description" content="Moirai is an AI trading council for Binance USDS-M perpetual futures. Six agents debate, an independent Risk service signs every order and Execution always places a stop. Paper-first, with real money gated by a statistical gate.">
+<meta name="theme-color" content="#F5F3EF">
+<meta name="color-scheme" content="light">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon-180.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Moirai">
+<meta property="og:title" content="Moirai | Spin, measure, cut">
+<meta property="og:description" content="An AI council for Binance USDS-M perpetual futures, with a fail-closed Risk service, signed orders and a stop on every position. Paper-first, with real money gated by a statistical gate.">
+<meta property="og:image" content="/assets/og-card-1200x630.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Moirai mark: three gilt strands drawing an M, cut by a thin oxblood blade.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="fonts/cinzel-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/fira-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/landing.css">
+<script src="js/landing.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="aurora" aria-hidden="true"><span class="aurora__f aurora__f--gilt"></span><span class="aurora__f aurora__f--lilac"></span><span class="aurora__f aurora__f--sky"></span><span class="aurora__f aurora__f--mint"></span></div>
+<div class="progress" aria-hidden="true"><span class="progress__fill"></span></div>
+<div class="glow" aria-hidden="true"></div>
+
+<header class="nav" data-nav>
+  <div class="nav__inner">
+    <a class="nav__brand" href="#top" aria-label="Moirai, back to top">
+      <img src="assets/moirai-lockup-horizontal-ink.svg" alt="" width="134" height="40">
+    </a>
+    <nav class="nav__links" aria-label="Sections">
+      <a href="#sisters">The three</a>
+      <a href="#pipeline">How it works</a>
+      <a href="#council">Council</a>
+      <a href="#guardrails">Guardrails</a>
+    </nav>
+    <div class="nav__actions">
+      <button class="motion-toggle" type="button" aria-pressed="false" data-motion-toggle hidden>
+        <svg class="motion-toggle__pause" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5v14M16 5v14"/></svg>
+        <svg class="motion-toggle__play" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 5l12 7-12 7z"/></svg>
+        <span class="sr-only" data-motion-label>Pause animations</span>
+      </button>
+      <a class="btn btn--primary btn--sm" href="/app/" data-magnetic>View live performance</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <canvas class="hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
+    <noscript><img class="hero__fallback" src="assets/moirai-mark-ink.svg" alt=""></noscript>
+    <div class="wrap hero__inner">
+      <div class="hero__copy">
+        <p class="tag"><span class="tag__mark" aria-hidden="true"></span>Paper-first. Real money stays gated by the G4 statistical gate.</p>
+        <h1 class="hero__title" id="hero-title">
+          <span class="w">Every</span> <span class="w">trade</span> <span class="w">is</span>
+          <span class="w">spun,</span> <span class="w">measured</span>
+          <span class="w">and</span> <span class="w w--cut">cut.</span>
+        </h1>
+        <p class="hero__lede">Six AI agents argue a thesis, an independent Risk service signs the order, and every position carries a stop.</p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="/app/" data-magnetic>View live performance<svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M13 6l6 6-6 6"/></svg></a>
+          <a class="btn btn--ghost" href="#pipeline">How it works</a>
+        </div>
+      </div>
+      <div class="hero__deck" aria-hidden="true">
+        <div class="dk dk--cycle">
+          <span class="live-dot"></span>
+          <span class="dk-cycle__label">Decision cycle</span>
+          <span class="dk-cycle__stage"><span>Spin</span><span>Measure</span><span>Cut</span></span>
+        </div>
+        <div class="dk dk--ballot">
+          <p class="dk__head"><span>Council ballot</span><span class="dk__tag">Example</span></p>
+          <p class="dk__sub">Blind round, answers sealed</p>
+          <ul class="ballot">
+            <li>Crowding</li><li>Technical</li><li>Micro</li><li>Fundamental</li><li>News</li><li>Macro</li>
+          </ul>
+          <p class="stances">
+            <span class="stance stance--long"><svg viewBox="0 0 12 12" focusable="false"><path d="M6 2l4.5 7h-9z"/></svg>Long</span>
+            <span class="stance stance--short"><svg viewBox="0 0 12 12" focusable="false"><path d="M6 10L1.5 3h9z"/></svg>Short</span>
+            <span class="stance stance--abstain"><svg viewBox="0 0 12 12" focusable="false"><path d="M2 6h8"/></svg>Abstain</span>
+          </p>
+        </div>
+        <div class="dk dk--ticket">
+          <p class="dk__head"><span>Order ticket</span><span class="dk__tag">Example</span></p>
+          <dl class="ticket">
+            <div><dt>Sized by</dt><dd>Risk</dd></div>
+            <div><dt>Stop</dt><dd class="ticket__ok">Attached</dd></div>
+            <div><dt>Signature</dt><dd>Ed25519</dd></div>
+            <div><dt>Keys</dt><dd>Execution only</dd></div>
+          </dl>
+          <p class="ticket__stamp"><svg viewBox="0 0 16 16" focusable="false"><path d="M3 8.5l3 3 7-7"/></svg>Risk signed</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sisters section" id="sisters" aria-labelledby="sisters-title">
+    <div class="wrap">
+      <header class="section-head">
+        <h2 id="sisters-title" data-reveal="wipe">Three hands on every trade.</h2>
+        <p data-reveal="rise">In the myth, the Moirai spin, measure and cut the thread of fate. Here each sister is a separate part of the system with one job.</p>
+      </header>
+      <ol class="sisters__row" data-reveal="stagger">
+        <li class="sister sister--clotho">
+          <svg class="sister__art" viewBox="0 0 360 220" aria-hidden="true" focusable="false">
+            <defs>
+              <pattern id="c-grid" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.9" class="art-dot"/></pattern>
+              <radialGradient id="c-glow" cx="0.62" cy="0.5" r="0.6"><stop offset="0" stop-color="#E9C98A" stop-opacity="0.38"/><stop offset="1" stop-color="#E9C98A" stop-opacity="0"/></radialGradient>
+              <linearGradient id="c-gilt" gradientUnits="userSpaceOnUse" x1="190" y1="0" x2="300" y2="0"><stop offset="0" stop-color="#B8903F"/><stop offset="0.55" stop-color="#E3C27E"/><stop offset="1" stop-color="#9C7630"/></linearGradient>
+            </defs>
+            <rect class="art-bg" width="360" height="220" fill="url(#c-grid)"/>
+            <rect width="360" height="220" fill="url(#c-glow)"/>
+            <g class="feeds">
+              <path class="feed" d="M60.3 52.2 C123.3 52.2 150 97.0 196 112"/>
+              <path class="feed" d="M54.5 73.0 C117.5 73.0 150 102.2 196 112"/>
+              <path class="feed" d="M51.4 98.5 C114.4 98.5 150 108.6 196 112"/>
+              <path class="feed" d="M51.4 125.5 C114.4 125.5 150 115.4 196 112"/>
+              <path class="feed" d="M54.5 151.0 C117.5 151.0 150 121.8 196 112"/>
+              <path class="feed" d="M60.3 171.8 C123.3 171.8 150 127.0 196 112"/>
+            </g>
+            <g class="braid">
+              <path class="strand strand--0" d="M196.0 112.0 L197.3 112.2 L198.7 112.6 L200.0 113.3 L201.3 114.2 L202.7 115.2 L204.0 116.1 L205.3 116.9 L206.7 117.5 L208.0 117.7 L209.3 117.6 L210.7 117.0 L212.0 116.0 L213.3 114.6 L214.7 112.8 L216.0 110.8 L217.3 108.9 L218.7 107.2 L220.0 105.8 L221.3 104.7 L222.7 104.0 L224.0 103.6 L225.3 103.7 L226.7 104.2 L228.0 105.0 L229.3 106.1 L230.7 107.5 L232.0 109.1 L233.3 110.7 L234.7 112.3 L236.0 113.9 L237.3 115.3 L238.7 116.6 L240.0 117.5 L241.3 118.2 L242.7 118.6 L244.0 118.6 L245.3 118.3 L246.7 117.8 L248.0 116.9 L249.3 115.9 L250.7 114.8 L252.0 113.5 L253.3 112.3 L254.7 111.0 L256.0 109.9 L257.3 108.9 L258.7 108.1 L260.0 107.6 L261.3 107.2 L262.7 107.1 L264.0 107.3 L265.3 107.6 L266.7 108.2 L268.0 108.9 L269.3 109.7 L270.7 110.6 L272.0 111.5 L273.3 112.3 L274.7 113.1 L276.0 113.8 L277.3 114.4 L278.7 114.8 L280.0 115.0 L281.3 115.1 L282.7 115.1 L284.0 114.8 L285.3 114.5 L286.7 114.1 L288.0 113.6 L289.3 113.0 L290.7 112.5 L292.0 112.0" stroke="url(#c-gilt)"/>
+              <path class="strand strand--1" d="M196.0 112.0 L197.3 112.6 L198.7 112.9 L200.0 112.8 L201.3 112.5 L202.7 111.8 L204.0 110.9 L205.3 109.7 L206.7 108.4 L208.0 107.1 L209.3 105.8 L210.7 104.8 L212.0 104.1 L213.3 103.7 L214.7 103.8 L216.0 104.7 L217.3 106.2 L218.7 107.9 L220.0 109.7 L221.3 111.6 L222.7 113.5 L224.0 115.2 L225.3 116.8 L226.7 118.0 L228.0 119.0 L229.3 119.6 L230.7 119.8 L232.0 119.6 L233.3 119.1 L234.7 118.3 L236.0 117.2 L237.3 115.9 L238.7 114.4 L240.0 112.9 L241.3 111.4 L242.7 110.0 L244.0 108.7 L245.3 107.6 L246.7 106.8 L248.0 106.2 L249.3 106.0 L250.7 106.0 L252.0 106.3 L253.3 106.9 L254.7 107.7 L256.0 108.7 L257.3 109.7 L258.7 110.9 L260.0 112.0 L261.3 113.1 L262.7 114.1 L264.0 114.9 L265.3 115.6 L266.7 116.0 L268.0 116.3 L269.3 116.3 L270.7 116.1 L272.0 115.7 L273.3 115.2 L274.7 114.6 L276.0 113.8 L277.3 113.1 L278.7 112.3 L280.0 111.6 L281.3 110.9 L282.7 110.4 L284.0 109.9 L285.3 109.6 L286.7 109.5 L288.0 109.5 L289.3 109.6 L290.7 109.8 L292.0 110.1" stroke="url(#c-gilt)"/>
+              <path class="strand strand--2" d="M196.0 112.0 L197.3 111.3 L198.7 110.5 L200.0 109.8 L201.3 109.3 L202.7 109.0 L204.0 109.0 L205.3 109.4 L206.7 110.1 L208.0 111.2 L209.3 112.6 L210.7 114.2 L212.0 116.0 L213.3 117.7 L214.7 119.4 L216.0 120.5 L217.3 120.9 L218.7 120.9 L220.0 120.5 L221.3 119.7 L222.7 118.6 L224.0 117.1 L225.3 115.5 L226.7 113.8 L228.0 112.0 L229.3 110.3 L230.7 108.7 L232.0 107.3 L233.3 106.2 L234.7 105.4 L236.0 104.9 L237.3 104.8 L238.7 105.0 L240.0 105.6 L241.3 106.4 L242.7 107.5 L244.0 108.7 L245.3 110.1 L246.7 111.4 L248.0 112.8 L249.3 114.1 L250.7 115.2 L252.0 116.1 L253.3 116.8 L254.7 117.3 L256.0 117.5 L257.3 117.4 L258.7 117.0 L260.0 116.4 L261.3 115.7 L262.7 114.8 L264.0 113.8 L265.3 112.8 L266.7 111.8 L268.0 110.9 L269.3 110.0 L270.7 109.3 L272.0 108.8 L273.3 108.5 L274.7 108.3 L276.0 108.3 L277.3 108.5 L278.7 108.9 L280.0 109.4 L281.3 110.0 L282.7 110.6 L284.0 111.2 L285.3 111.9 L286.7 112.5 L288.0 113.0 L289.3 113.4 L290.7 113.7 L292.0 113.9" stroke="url(#c-gilt)"/>
+            </g>
+            <path class="thread-out draw" pathLength="1" d="M292 112H300" stroke="url(#c-gilt)"/>
+            <g class="agents">
+              <g class="agent"><circle class="agent__ring" cx="53.3" cy="52.2" r="7"/><circle class="agent__core" cx="53.3" cy="52.2" r="2.4"/></g>
+              <g class="agent"><circle class="agent__ring" cx="47.5" cy="73.0" r="7"/><circle class="agent__core" cx="47.5" cy="73.0" r="2.4"/></g>
+              <g class="agent"><circle class="agent__ring" cx="44.4" cy="98.5" r="7"/><circle class="agent__core" cx="44.4" cy="98.5" r="2.4"/></g>
+              <g class="agent"><circle class="agent__ring" cx="44.4" cy="125.5" r="7"/><circle class="agent__core" cx="44.4" cy="125.5" r="2.4"/></g>
+              <g class="agent"><circle class="agent__ring" cx="47.5" cy="151.0" r="7"/><circle class="agent__core" cx="47.5" cy="151.0" r="2.4"/></g>
+              <g class="agent"><circle class="agent__ring" cx="53.3" cy="171.8" r="7"/><circle class="agent__core" cx="53.3" cy="171.8" r="2.4"/></g>
+            </g>
+            <g class="chip chip--gilt"><rect x="296" y="99" width="56" height="26" rx="13"/><text x="324" y="116">Thesis</text></g>
+            <text class="art-caption" x="18" y="206">6 agents</text>
+            <text class="art-caption" x="200" y="206">one thesis</text>
+          </svg>
+          <div class="sister__text">
+            <p class="sister__verb">Spins</p>
+            <h3 class="sister__name">Clotho</h3>
+            <p>The council builds the thesis. Six agents read a deterministic quantitative core and argue until a fixed-rule Manager decides.</p>
+          </div>
+        </li>
+        <li class="sister sister--lachesis">
+          <svg class="sister__art" viewBox="0 0 360 220" aria-hidden="true" focusable="false">
+            <defs>
+              <pattern id="l-grid" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.9" class="art-dot"/></pattern>
+              <radialGradient id="l-glow" cx="0.62" cy="0.5" r="0.6"><stop offset="0" stop-color="#E9C98A" stop-opacity="0.38"/><stop offset="1" stop-color="#E9C98A" stop-opacity="0"/></radialGradient>
+              <linearGradient id="l-gilt" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="360" y2="0"><stop offset="0" stop-color="#B8903F"/><stop offset="0.55" stop-color="#E3C27E"/><stop offset="1" stop-color="#9C7630"/></linearGradient>
+            </defs>
+            <rect class="art-bg" width="360" height="220" fill="url(#l-grid)"/>
+            <rect width="360" height="220" fill="url(#l-glow)"/>
+            <linearGradient id="l-steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3A3444"/><stop offset="0.5" stop-color="#6A6275"/><stop offset="1" stop-color="#2A2532"/></linearGradient>
+            <path class="thread-base" d="M0 132H360" stroke="url(#l-gilt)"/>
+            <rect class="span-band" x="76" y="128.5" width="156" height="7" rx="3.5"/>
+            <line class="ceiling" x1="296" y1="54" x2="296" y2="172"/>
+            <g class="ruler">
+              <rect x="28" y="54" width="304" height="26" rx="8"/>
+              <path class="ruler__ticks" d="M36 80v-9M44 80v-5M52 80v-5M60 80v-5M68 80v-5M76 80v-9M84 80v-5M92 80v-5M100 80v-5M108 80v-5M116 80v-9M124 80v-5M132 80v-5M140 80v-5M148 80v-5M156 80v-9M164 80v-5M172 80v-5M180 80v-5M188 80v-5M196 80v-9M204 80v-5M212 80v-5M220 80v-5M228 80v-5M236 80v-9M244 80v-5M252 80v-5M260 80v-5M268 80v-5M276 80v-9M284 80v-5M292 80v-5M300 80v-5M308 80v-5M316 80v-9M324 80v-5"/>
+            </g>
+            <path class="jaw" d="M70 58H82V118L76 128L70 118Z"/>
+            <g class="jaw-move">
+              <rect class="slider" x="219" y="50" width="26" height="34" rx="7"/>
+              <path class="jaw" d="M226 58H238V118L232 128L226 118Z"/>
+            </g>
+            <g class="chip"><rect x="116" y="146" width="76" height="24" rx="12"/><text x="154" y="162">Size</text></g>
+            <g class="chip chip--ink"><rect x="250" y="176" width="92" height="24" rx="12"/><path class="chip__lock" d="M263 188h8v6h-8zM264.5 188v-2.2a2.5 2.5 0 0 1 5 0V188"/><text x="304" y="192">Ceiling</text></g>
+          </svg>
+          <div class="sister__text">
+            <p class="sister__verb">Measures</p>
+            <h3 class="sister__name">Lachesis</h3>
+            <p>Risk sizes the order. It is fail-closed, enforces hard ceilings and signs every order it allows with Ed25519.</p>
+          </div>
+        </li>
+        <li class="sister sister--atropos">
+          <svg class="sister__art" viewBox="0 0 360 220" aria-hidden="true" focusable="false">
+            <defs>
+              <pattern id="a-grid" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.9" class="art-dot"/></pattern>
+              <radialGradient id="a-glow" cx="0.62" cy="0.5" r="0.6"><stop offset="0" stop-color="#E9C98A" stop-opacity="0.38"/><stop offset="1" stop-color="#E9C98A" stop-opacity="0"/></radialGradient>
+              <linearGradient id="a-gilt" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="360" y2="0"><stop offset="0" stop-color="#B8903F"/><stop offset="0.55" stop-color="#E3C27E"/><stop offset="1" stop-color="#9C7630"/></linearGradient>
+            </defs>
+            <rect class="art-bg" width="360" height="220" fill="url(#a-grid)"/>
+            <rect width="360" height="220" fill="url(#a-glow)"/>
+            <linearGradient id="a-blade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C4473F"/><stop offset="0.5" stop-color="#8E2424"/><stop offset="1" stop-color="#5E1616"/></linearGradient>
+            <path class="thread-base draw" pathLength="1" d="M0 118H174" stroke="url(#a-gilt)"/>
+            <g class="loose"><path class="thread-base" d="M186 118H360" stroke="url(#a-gilt)"/></g>
+            <g class="sparks"><path d="M180 106v-9M190 110l7-6M170 110l-7-6M180 130v9"/></g>
+            <path class="stop-line" d="M150 118V146"/>
+            <g class="chip chip--stop"><rect x="112" y="146" width="76" height="26" rx="13"/><path class="chip__oct" d="M126.2 153h3.6l2.6 2.6v3.6l-2.6 2.6h-3.6l-2.6-2.6v-3.6z"/><text x="158" y="163">Stop</text></g>
+            <g class="blade-wrap">
+              <g transform="translate(254 46) rotate(-38)">
+                <path class="blade" d="M4 -9L-96 -1.2Q-106 0 -96 2.4L4 9Q10 0 4 -9Z"/>
+                <path class="blade__edge" d="M-2 6L-92 1.6"/>
+                <path class="shank" d="M6 0L33 0"/>
+                <circle class="ring" cx="46" cy="0" r="13"/>
+              </g>
+              <g transform="translate(254 46) rotate(-50)">
+                <path class="blade" d="M4 -9L-96 -1.2Q-106 0 -96 2.4L4 9Q10 0 4 -9Z"/>
+                <path class="blade__edge" d="M-2 6L-92 1.6"/>
+                <path class="shank" d="M6 0L29 0"/>
+                <circle class="ring" cx="42" cy="0" r="13"/>
+              </g>
+              <circle class="pivot" cx="254" cy="46" r="4.5"/>
+            </g>
+            <circle class="cut-point" cx="180" cy="118" r="3.5"/>
+          </svg>
+          <div class="sister__text">
+            <p class="sister__verb">Cuts</p>
+            <h3 class="sister__name">Atropos</h3>
+            <p>Execution cuts. It verifies every signature, keeps its own limits and always places a stop with the position.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <div class="cut" data-reveal="cut" aria-hidden="true"><span class="cut__l"></span><span class="cut__r"></span><span class="cut__blade"></span></div>
+
+  <section class="pipeline section" id="pipeline" aria-labelledby="pipeline-title" data-pipeline>
+    <div class="wrap">
+      <header class="section-head">
+        <h2 id="pipeline-title" data-reveal="wipe">From raw tick to scored forecast.</h2>
+        <p data-reveal="rise">Eight steps in one direction, then a loop back: every forecast is scored 12 hours later and the council learns from it.</p>
+      </header>
+      <div class="pipeline__body">
+        <div class="pipeline__stage">
+          <svg class="pipeline__svg" viewBox="-24 0 424 690" aria-hidden="true" focusable="false">
+            <path class="pl-track" d="M80 40V642"/>
+            <path class="pl-line" data-pl-line d="M80 40V642"/>
+            <path class="pl-loop" data-pl-loop pathLength="1" d="M80 642H50Q20 642 20 612V328Q20 298 50 298H80"/>
+            <text class="pl-loop__label" x="6" y="470" text-anchor="middle" transform="rotate(-90 6 470)">scored after 12 h</text>
+            <g data-pl-packets></g>
+            <g class="pl-node" data-pl-node="0"><circle cx="80" cy="40" r="9"/><text x="112" y="46">Recorder</text></g>
+            <g class="pl-node" data-pl-node="1"><circle cx="80" cy="126" r="9"/><text x="112" y="132">Data lake</text></g>
+            <g class="pl-node" data-pl-node="2"><circle cx="80" cy="212" r="9"/><text x="112" y="218">Quant core</text></g>
+            <g class="pl-node" data-pl-node="3"><circle cx="80" cy="298" r="9"/><text x="112" y="304">Council</text></g>
+            <g class="pl-node" data-pl-node="4"><circle cx="80" cy="384" r="9"/><text x="112" y="390">Manager</text></g>
+            <g class="pl-node" data-pl-node="5"><circle cx="80" cy="470" r="9"/><text x="112" y="476">Risk</text></g>
+            <g class="pl-node" data-pl-node="6"><circle cx="80" cy="556" r="9"/><text x="112" y="562">Execution</text></g>
+            <g class="pl-node" data-pl-node="7"><circle cx="80" cy="642" r="9"/><text x="112" y="648">Scorer</text></g>
+          </svg>
+        </div>
+        <ol class="steps" data-steps>
+          <li class="step" data-step="0">
+            <span class="step__n">01</span>
+            <h3>Recorder</h3>
+            <p>Captures CoinMarketCap signals and Binance public market data. Binance is the execution layer and the source of truth.</p>
+          </li>
+          <li class="step" data-step="1">
+            <span class="step__n">02</span>
+            <h3>Data lake</h3>
+            <p>Every capture lands in an immutable lake linked by a hash chain. Queries are point-in-time, so no step sees the future.</p>
+          </li>
+          <li class="step" data-step="2">
+            <span class="step__n">03</span>
+            <h3>Quant core</h3>
+            <p>Deterministic features, per-agent probabilities and shared price levels. A scanner turns them into trade candidates.</p>
+          </li>
+          <li class="step" data-step="3">
+            <span class="step__n">04</span>
+            <h3>Council</h3>
+            <p>Six agents answer blind, then debate for at most three rounds with anonymous claims that code verifies.</p>
+          </li>
+          <li class="step" data-step="4">
+            <span class="step__n">05</span>
+            <h3>Manager</h3>
+            <p>A fixed-rule Manager aggregates the council and decides. The last word belongs to rules, not to a model.</p>
+          </li>
+          <li class="step" data-step="5">
+            <span class="step__n">06</span>
+            <h3>Risk</h3>
+            <p>Fail-closed. Sizes the order, enforces hard ceilings and signs it with Ed25519. No signature, no order.</p>
+          </li>
+          <li class="step" data-step="6">
+            <span class="step__n">07</span>
+            <h3>Execution</h3>
+            <p>The only service holding exchange keys. Verifies the signature, keeps its own limits, always places a STOP and reconciles.</p>
+          </li>
+          <li class="step" data-step="7">
+            <span class="step__n">08</span>
+            <h3>Scorer</h3>
+            <p>Labels every forecast 12 hours after it was made. Agent weights learn from the outcomes and flow back to the council.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="council section" id="council" aria-labelledby="council-title" data-council>
+    <div class="wrap">
+      <header class="section-head">
+        <h2 id="council-title" data-reveal="wipe">Six voices, one fixed rule.</h2>
+        <p data-reveal="rise">Round one is blind: no agent sees another. Then up to three debate rounds, where claims are anonymous and checked by code before they count.</p>
+      </header>
+      <figure class="council__stage">
+        <svg class="council__svg" viewBox="0 0 640 560" role="img" aria-labelledby="council-svg-title">
+          <title id="council-svg-title">Six agents, crowding, technical, micro, fundamental, news and macro, sit in a ring around the Manager, which passes its decision on to Risk.</title>
+          <circle class="c-ring" cx="320" cy="280" r="200"/>
+          <g class="c-spokes" data-c-spokes>
+            <line x1="320" y1="80" x2="320" y2="280"/>
+            <line x1="493.2" y1="180" x2="320" y2="280"/>
+            <line x1="493.2" y1="380" x2="320" y2="280"/>
+            <line x1="320" y1="480" x2="320" y2="280"/>
+            <line x1="146.8" y1="380" x2="320" y2="280"/>
+            <line x1="146.8" y1="180" x2="320" y2="280"/>
+          </g>
+          <g class="c-chords" data-c-chords></g>
+          <path class="c-out" data-c-out pathLength="1" d="M364 280H636"/>
+          <text class="c-out__label" x="636" y="266" text-anchor="end">to Risk</text>
+          <g data-c-packets></g>
+          <g class="c-agent" data-c-agent="0"><circle class="c-halo" cx="320" cy="80" r="20"/><circle class="c-dot" cx="320" cy="80" r="9"/><text x="320" y="44" text-anchor="middle">Crowding</text></g>
+          <g class="c-agent" data-c-agent="1"><circle class="c-halo" cx="493.2" cy="180" r="20"/><circle class="c-dot" cx="493.2" cy="180" r="9"/><text x="524" y="172">Technical</text></g>
+          <g class="c-agent" data-c-agent="2"><circle class="c-halo" cx="493.2" cy="380" r="20"/><circle class="c-dot" cx="493.2" cy="380" r="9"/><text x="524" y="404">Micro</text></g>
+          <g class="c-agent" data-c-agent="3"><circle class="c-halo" cx="320" cy="480" r="20"/><circle class="c-dot" cx="320" cy="480" r="9"/><text x="320" y="528" text-anchor="middle">Fundamental</text></g>
+          <g class="c-agent" data-c-agent="4"><circle class="c-halo" cx="146.8" cy="380" r="20"/><circle class="c-dot" cx="146.8" cy="380" r="9"/><text x="116" y="404" text-anchor="end">News</text></g>
+          <g class="c-agent" data-c-agent="5"><circle class="c-halo" cx="146.8" cy="180" r="20"/><circle class="c-dot" cx="146.8" cy="180" r="9"/><text x="116" y="172" text-anchor="end">Macro</text></g>
+          <g class="c-manager" data-c-manager>
+            <circle class="c-manager__pulse" cx="320" cy="280" r="44"/>
+            <circle class="c-manager__core" cx="320" cy="280" r="44"/>
+            <text x="320" y="286" text-anchor="middle">Manager</text>
+          </g>
+        </svg>
+        <figcaption class="timeline">
+          <ol class="timeline__list">
+            <li class="timeline__item" data-c-phase="0"><span class="timeline__bar"><span class="timeline__fill"></span></span><span class="timeline__label">Blind round</span></li>
+            <li class="timeline__item" data-c-phase="1"><span class="timeline__bar"><span class="timeline__fill"></span></span><span class="timeline__label">Debate, up to 3 rounds</span></li>
+            <li class="timeline__item" data-c-phase="2"><span class="timeline__bar"><span class="timeline__fill"></span></span><span class="timeline__label">Manager decides</span></li>
+          </ol>
+          <p class="timeline__now" aria-hidden="true" data-c-caption>Blind round: each agent answers alone.</p>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="facts" aria-labelledby="facts-title">
+    <div class="wrap">
+      <h2 class="facts__title" id="facts-title" data-reveal="wipe">Design numbers, not results.</h2>
+      <div class="facts__row" data-reveal="stagger">
+        <div class="fact">
+          <p class="fact__value"><span data-count="6">6</span></p>
+          <p class="fact__label">LLM agents on a deterministic quantitative core</p>
+        </div>
+        <div class="fact">
+          <p class="fact__value"><span data-count="3">3</span></p>
+          <p class="fact__label">debate rounds at most, after a blind first round</p>
+        </div>
+        <div class="fact">
+          <p class="fact__value"><span data-count="12">12</span><span class="fact__unit">h</span></p>
+          <p class="fact__label">until each forecast is scored against the market</p>
+        </div>
+        <div class="fact">
+          <p class="fact__value"><span data-count="60">60</span><span class="fact__unit">s</span></p>
+          <p class="fact__label">between public dashboard snapshots</p>
+        </div>
+        <div class="fact">
+          <p class="fact__value"><span data-count="150">150</span></p>
+          <p class="fact__label">independent entry orders, at least, before the real-money gate</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cut" data-reveal="cut" aria-hidden="true"><span class="cut__l"></span><span class="cut__r"></span><span class="cut__blade"></span></div>
+
+  <section class="guardrails section" id="guardrails" aria-labelledby="guardrails-title">
+    <div class="wrap">
+      <header class="section-head">
+        <h2 id="guardrails-title" data-reveal="wipe">Built to say no.</h2>
+        <p data-reveal="rise">Every layer between a thesis and the exchange can stop a trade on its own.</p>
+      </header>
+      <div class="bento" data-reveal="stagger">
+        <article class="cell cell--gate">
+          <svg class="cell__icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M8 42V14l16-8 16 8v28M8 42h32M18 42V24h12v18"/></svg>
+          <h3>Gate G4 before real money</h3>
+          <p>Every strategy trades on paper first and has to clear a statistical shadow gate.</p>
+          <ul class="gate">
+            <li><span class="gate__k">&ge; 150</span><span>independent entry orders</span></li>
+            <li><span class="gate__k">pass</span><span>calibration checks</span></li>
+            <li><span class="gate__k">&gt; 1.5</span><span>annualized daily Sharpe, with PSR(0) &ge; 0.95</span></li>
+            <li><span class="gate__k">&lt; 10 %</span><span>maximum drawdown</span></li>
+          </ul>
+          <p class="cell__foot">Then 1/4 size, on a limited-capital sub-account with a trade-only key.</p>
+        </article>
+        <article class="cell cell--veto">
+          <svg class="cell__icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M6 24h14M28 24h14M20 14v20M28 14v20"/></svg>
+          <h3>Fail-closed veto</h3>
+          <p>If Risk cannot approve an order, the order does not exist. A failure anywhere in Risk means no trade.</p>
+        </article>
+        <article class="cell cell--sign">
+          <svg class="cell__icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M10 6h20l8 8v28H10zM30 6v8h8M17 30l5 5 9-11"/></svg>
+          <h3>Signed orders</h3>
+          <p>Risk signs every order with Ed25519. Execution checks the signature before it acts.</p>
+        </article>
+        <article class="cell cell--keys">
+          <svg class="cell__icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M30 18a8 8 0 1 1-16 0 8 8 0 0 1 16 0zM22 26v16M22 34h6M22 40h8"/></svg>
+          <h3>Keys in one place</h3>
+          <p>Execution is the only component that holds exchange keys.</p>
+        </article>
+        <article class="cell cell--ceil">
+          <svg class="cell__icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M6 10h36M12 42V22M24 42V16M36 42V28"/></svg>
+          <h3>Hard ceilings</h3>
+          <p>Risk enforces hard limits on every order. Execution keeps limits of its own.</p>
+        </article>
+        <article class="cell cell--kill">
+          <svg class="cell__icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M24 6v16M14 12a16 16 0 1 0 20 0"/></svg>
+          <h3>Kill switch</h3>
+          <p>Execution can stop all trading at once and reconciles what is open.</p>
+        </article>
+        <article class="cell cell--paper">
+          <svg class="cell__icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M10 6h28v36H10zM16 16h16M16 24h16M16 32h10"/></svg>
+          <h3>Paper first</h3>
+          <p>Moirai starts on paper. Real money stays gated by Gate G4, and then starts at a quarter of the size.</p>
+        </article>
+      </div>
+    </div>
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>Fail-closed veto</span><span>Hard ceilings</span><span>Ed25519 signatures</span><span>Keys only in Execution</span><span>A stop on every position</span><span>Kill switch</span><span>Paper first</span><span>Gate G4</span>
+        <span>Fail-closed veto</span><span>Hard ceilings</span><span>Ed25519 signatures</span><span>Keys only in Execution</span><span>A stop on every position</span><span>Kill switch</span><span>Paper first</span><span>Gate G4</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="open section" id="transparency" aria-labelledby="open-title">
+    <div class="wrap open__grid">
+      <div class="open__copy">
+        <h2 id="open-title" data-reveal="wipe">Everything in the open.</h2>
+        <p data-reveal="rise">A read-only snapshot every 60 seconds: every council debate and decision, positions with their stops, every order, agent metrics and LLM cost. The dashboard has no route to the trading system.</p>
+        <a class="btn btn--primary" href="/app/" data-magnetic>View live performance<svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h13M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <figure class="preview" data-reveal="rise">
+        <div class="preview__frame" aria-hidden="true">
+          <div class="preview__bar">
+            <img src="assets/moirai-mark-solid-ink.svg" alt="" width="20" height="20">
+            <span>Public dashboard</span>
+            <span class="preview__meta">snapshot every 60 s</span>
+          </div>
+          <div class="preview__grid">
+            <div class="pv pv--positions">
+              <p class="pv__title">Positions</p>
+              <svg class="pv__candles" viewBox="0 0 240 40" preserveAspectRatio="none" focusable="false">
+                <path class="wick" d="M10 10v24M30 6v22M50 12v22M70 4v20M90 8v24M110 2v20M130 6v18M150 10v22M170 4v18M190 8v20M210 2v18M230 6v16"/>
+                <path class="body body--up" d="M6 16h8v12H6zM46 16h8v12h-8zM106 6h8v10h-8zM126 10h8v10h-8zM166 8h8v8h-8zM206 5h8v9h-8z"/>
+                <path class="body body--down" d="M26 10h8v12h-8zM66 8h8v10h-8zM86 12h8v14h-8zM146 14h8v10h-8zM186 11h8v11h-8zM226 9h8v8h-8z"/>
+              </svg>
+              <span class="sk"></span><span class="sk sk--short"></span>
+            </div>
+            <div class="pv pv--decisions">
+              <p class="pv__title">Scored decisions</p>
+              <div class="pv__cards">
+                <div class="pv-card"><span class="pv-card__tag">scored</span><span class="sk"></span></div>
+                <div class="pv-card"><span class="pv-card__tag">scored</span><span class="sk"></span></div>
+                <div class="pv-card"><span class="pv-card__tag">scored</span><span class="sk"></span></div>
+                <div class="pv-card"><span class="pv-card__tag">scored</span><span class="sk"></span></div>
+              </div>
+            </div>
+            <div class="pv pv--agents">
+              <p class="pv__title">Agent metrics</p>
+              <p class="pv__agent"><span>Crowding</span><span class="sk"></span></p>
+              <p class="pv__agent"><span>Technical</span><span class="sk"></span></p>
+              <p class="pv__agent"><span>Micro</span><span class="sk"></span></p>
+              <p class="pv__agent"><span>Fundamental</span><span class="sk"></span></p>
+              <p class="pv__agent"><span>News</span><span class="sk"></span></p>
+              <p class="pv__agent"><span>Macro</span><span class="sk"></span></p>
+            </div>
+            <div class="pv pv--cost">
+              <p class="pv__title">LLM cost</p>
+              <span class="sk"></span><span class="sk sk--short"></span>
+            </div>
+          </div>
+        </div>
+        <figcaption>Illustrative layout only, no real data. Decision cards appear as soon as the council decides.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <div class="cut" data-reveal="cut" aria-hidden="true"><span class="cut__l"></span><span class="cut__r"></span><span class="cut__blade"></span></div>
+
+  <section class="risk" aria-labelledby="risk-title">
+    <div class="wrap risk__wrap">
+      <div class="risk__inner">
+        <h2 id="risk-title">Risk warning</h2>
+        <p>Moirai trades leveraged derivatives. Leveraged trading can lose more than the capital allocated to it, and past or simulated performance does not predict future results. The system runs paper trading first and may only trade real money after the statistical shadow gate G4 passes. Nothing on this page is investment advice.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__inner">
+    <div class="footer__brand">
+      <img src="assets/moirai-lockup-horizontal-ink.svg" alt="Moirai" width="161" height="48">
+      <p class="footer__tagline">Spin &middot; Measure &middot; Cut</p>
+    </div>
+    <p class="footer__about">An AI council for Binance USDS-M perpetual futures. Paper-first, with real money gated by the G4 statistical gate.</p>
+    <nav class="footer__links" aria-label="Footer">
+      <a href="/app/">View live performance</a>
+      <a href="#top">Back to top</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

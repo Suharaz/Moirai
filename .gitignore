@@ -1,0 +1,36 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+!.env.prod.example
+secrets/*
+!secrets/*.enc.yaml
+*.key
+*.pem
+deploy/redis/users.acl
+
+# Data
+data/
+*.parquet
+.langfuse/
+reports/**/*.json
+!reports/**/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+htmlcov/
+
+# Tooling
+node_modules/
+.streamlit/secrets.toml
+.DS_Store

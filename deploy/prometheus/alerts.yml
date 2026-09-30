@@ -1,0 +1,274 @@
+# Prometheus alert rules (phase 10). Every operator rule carries `hdt_kind` (a kind of
+# hdt.ops.alerts.AlertKind) and `severity`; the telegram-bot mirrors firing rules into the alert outbox and
+# sends them to Telegram, and resolves them when they stop firing. Grafana shows the same rules (dashboard
+# "HDT ops"). Conditions owned by a service (reconcile mismatch, kill switch, daily loss, route dead, CMC
+# credits) are raised by that service or by the bot's database rules, not here.
+# `Watchdog` has no `hdt_kind`: Alertmanager sends it to the external dead-man check, and rules labelled
+# `hdt_deadman: stop` (the Telegram path itself is broken) silence it on purpose so that check pages the
+# operator out of band (deploy/alertmanager/alertmanager.yml, docs/runbook.md section 9).
+
+groups:
+  - name: hdt-meta
+    rules:
+      - alert: Watchdog
+        expr: vector(1)
+        labels:
+          severity: info
+        annotations:
+          summary: "Always firing: proves Prometheus, Alertmanager and the egress path work"
+          description: "Sent every minute to the external dead-man check. The check alerting means this pipeline or the host is down (runbook: service down)."
+
+  - name: hdt-services
+    rules:
+      - alert: ServiceDown
+        expr: up{job!="prometheus"} == 0
+        for: 2m
+        labels:
+          hdt_kind: service_down
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} is not answering metrics scrapes"
+          description: "Prometheus cannot scrape {{ $labels.instance }} (job {{ $labels.job }}) for 2 minutes. Check `docker compose ps` and the service logs (runbook: service down)."
+
+      - alert: TargetDisappeared
+        expr: |
+          max by (job) (max_over_time(up{job=~"council|news|veto-scan|scorer|risk|execution"}[24h]))
+          unless max by (job) (up{job=~"council|news|veto-scan|scorer|risk|execution"})
+        for: 2m
+        labels:
+          hdt_kind: service_down
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} disappeared"
+          description: "{{ $labels.job }} was scraped in the last 24 h but no container answers to its name any more (stopped or crash-looping). Check `docker compose ps -a` (runbook: service down)."
+
+      - alert: ProbeFailed
+        expr: probe_success == 0
+        for: 2m
+        labels:
+          hdt_kind: service_down
+          severity: critical
+        annotations:
+          summary: "{{ $labels.service }} fails its health probe"
+          description: "The blackbox probe of {{ $labels.instance }} ({{ $labels.service }}) has failed for 2 minutes. For egress-proxy the probe expects Squid to answer and to deny a plain-HTTP request with 403 (runbook: service down)."
+
+      - alert: TelegramBotStalled
+        # Only the bot's series: every process importing hdt.ops.metrics exports the heartbeat gauge at 0.
+        expr: |
+          time() - hdt_telegram_poll_heartbeat_timestamp_seconds{job="telegram-bot"} > 180
+          or absent(hdt_telegram_poll_heartbeat_timestamp_seconds{job="telegram-bot"})
+        for: 2m
+        labels:
+          hdt_kind: service_down
+          severity: critical
+          hdt_deadman: stop
+        annotations:
+          summary: "telegram-bot loop is stalled or down"
+          description: "The Telegram bot loop has not completed an iteration for more than 3 minutes, so Telegram alerts and commands are not processed. The dead-man pings stop while this fires. Use `hdt-kill` over SSH if a kill is needed (runbook: service down)."
+
+      - alert: TelegramBotErrors
+        expr: sum(increase(hdt_telegram_loop_errors_total{stage=~"iteration|dispatch"}[15m])) > 10
+        for: 5m
+        labels:
+          hdt_kind: service_down
+          severity: critical
+          hdt_deadman: stop
+        annotations:
+          summary: "telegram-bot keeps failing ({{ $value | humanize }} loop errors in 15 minutes)"
+          description: "The bot loop is alive but its iterations or alert dispatch keep failing (Postgres, Redis or Telegram errors), so alerts may not be delivered. The dead-man pings stop while this fires. Read `docker compose logs telegram-bot` (runbook: service down)."
+
+      - alert: AlertDeliveryFailing
+        expr: sum(increase(hdt_alerts_delivery_failures_total[15m])) > 0
+        for: 30m
+        labels:
+          hdt_kind: service_down
+          severity: critical
+          hdt_deadman: stop
+        annotations:
+          summary: "Telegram alert notifications keep failing to send"
+          description: "The telegram-bot has failed to deliver alert notifications in every 15-minute window for 30 minutes (Telegram unreachable through egress-proxy, a revoked token, or no allowed user reachable), so operator alerts are not arriving. The dead-man pings stop while this fires. Read `docker compose logs telegram-bot` (runbook: service down)."
+
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          hdt_kind: service_down
+          severity: critical
+        annotations:
+          summary: "postgres-exporter cannot query Postgres"
+          description: "The exporter answers but its connection as hdt_monitor fails: Postgres is down, refusing connections or out of connection slots (runbook: service down)."
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          hdt_kind: service_down
+          severity: critical
+        annotations:
+          summary: "redis-exporter cannot query Redis"
+          description: "The exporter answers but cannot run INFO as the ACL user monitor: Redis is down or its ACL file changed (runbook: service down)."
+
+  - name: hdt-host
+    rules:
+      - alert: HostMemoryHigh
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.85
+        for: 10m
+        labels:
+          hdt_kind: ram_usage
+          severity: warning
+        annotations:
+          summary: "Host memory at {{ $value | humanizePercentage }}"
+          description: "Memory use above 85% for 10 minutes. Largest consumers are usually Langfuse (ClickHouse) and the council; move Langfuse to a second VPS if this persists (runbook: RAM)."
+
+      - alert: HostDiskHigh
+        expr: |
+          (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs"}) >= 0.80
+          and node_filesystem_size_bytes > 1e9
+        for: 10m
+        labels:
+          hdt_kind: disk_usage
+          severity: warning
+        annotations:
+          summary: "Disk {{ $labels.mountpoint }} at {{ $value | humanizePercentage }}"
+          description: "Filesystem {{ $labels.mountpoint }} is at or above 80% (runbook: disk full)."
+
+      - alert: HostDiskCritical
+        expr: |
+          (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs"}) >= 0.90
+          and node_filesystem_size_bytes > 1e9
+        for: 5m
+        labels:
+          hdt_kind: disk_usage
+          severity: critical
+        annotations:
+          summary: "Disk {{ $labels.mountpoint }} at {{ $value | humanizePercentage }}"
+          description: "Filesystem {{ $labels.mountpoint }} is at or above 90%; Postgres and the lake stop writing when it is full (runbook: disk full)."
+
+  - name: hdt-data-path
+    rules:
+      - alert: FetcherBlocksAbnormal
+        expr: sum(increase(hdt_fetch_blocked_total[1h])) > 20
+        for: 5m
+        labels:
+          hdt_kind: fetcher_blocks
+          severity: warning
+        annotations:
+          summary: "{{ $value | humanize }} fetcher answers refused in the last hour"
+          description: "More than 20 fetcher answers were refused by the fetch contract check in one hour (wrong item or URL, sha256 mismatch, more than 3 redirects, final URL mismatch, non-http redirect, redirect adding query parameters). Inspect the news items behind them (runbook: fetcher blocks)."
+
+      # The council exports every reason of hdt_fetch_blocked_total at 0 from process start, so a council
+      # that is scraped but lacks the series has lost the instrumentation and the rule above is blind.
+      - alert: FetcherBlocksNotExported
+        expr: absent(hdt_fetch_blocked_total{job="council"}) and on() max(up{job="council"}) == 1
+        for: 15m
+        labels:
+          hdt_kind: fetcher_blocks
+          severity: warning
+        annotations:
+          summary: "The council exports no fetcher block counter"
+          description: "council is scraped but hdt_fetch_blocked_total is missing, so abnormal fetcher blocks cannot be detected. Check that the council imports hdt.ops.metrics (runbook: fetcher blocks)."
+
+      - alert: PublicSnapshotStale
+        # Only the publisher's series: every process importing hdt.ops.metrics exports this gauge at 0.
+        expr: time() - hdt_public_snapshot_last_success_timestamp_seconds{job="public-publisher"} > 300
+        for: 5m
+        labels:
+          hdt_kind: public_snapshot_stale
+          severity: warning
+        annotations:
+          summary: "Public snapshot is {{ $value | humanizeDuration }} old"
+          description: "public-publisher has not written a snapshot for more than 5 minutes; the public dashboard shows a stale banner (runbook: public snapshot stale)."
+
+      - alert: PublicSnapshotRejected
+        expr: increase(hdt_public_snapshot_rejected_total[15m]) > 0
+        labels:
+          hdt_kind: public_snapshot_stale
+          severity: warning
+        annotations:
+          summary: "A public snapshot failed allowlist or schema validation"
+          description: "public-publisher refused to publish a snapshot in the last 15 minutes; the previous snapshot stays online. Read the publisher log for the failing field (runbook: public snapshot stale)."
+
+  - name: hdt-backup
+    rules:
+      - alert: BackupStale
+        expr: time() - hdt_backup_last_success_timestamp_seconds{kind=~"base|logical|lake"} > 26 * 3600
+        for: 10m
+        labels:
+          hdt_kind: backup_stale
+          severity: critical
+        annotations:
+          summary: "No successful {{ $labels.kind }} backup for {{ $value | humanizeDuration }}"
+          description: "The daily {{ $labels.kind }} backup has not succeeded for more than 26 hours (runbook: backups)."
+
+      # A step whose last failure is newer than its last success (or that never succeeded) keeps failing;
+      # the daemon retries it with backoff, so a transient error clears before the 15 minutes pass.
+      - alert: BackupStepFailing
+        expr: |
+          hdt_backup_last_failure_timestamp_seconds{kind=~"wal|base|logical|lake"}
+            > on(kind) hdt_backup_last_success_timestamp_seconds
+          or (
+            hdt_backup_last_failure_timestamp_seconds{kind=~"wal|base|logical|lake"}
+            unless on(kind) hdt_backup_last_success_timestamp_seconds
+          )
+        for: 15m
+        labels:
+          hdt_kind: backup_stale
+          severity: critical
+        annotations:
+          summary: "Backup step {{ $labels.kind }} keeps failing"
+          description: "The last {{ $labels.kind }} attempt failed and none has succeeded since. `docker compose logs backup` names the error (runbook: backups)."
+
+      - alert: BackupNeverSucceeded
+        expr: |
+          absent(hdt_backup_last_success_timestamp_seconds{kind="base"})
+          or absent(hdt_backup_last_success_timestamp_seconds{kind="logical"})
+          or absent(hdt_backup_last_success_timestamp_seconds{kind="lake"})
+        for: 30h
+        labels:
+          hdt_kind: backup_stale
+          severity: critical
+        annotations:
+          summary: "No {{ $labels.kind }} backup has ever succeeded"
+          description: "No successful {{ $labels.kind }} backup has been recorded for 30 hours, although the daily run starts at HDT_BACKUP_HOUR_UTC (runbook: backups)."
+
+      - alert: WalShippingStale
+        expr: |
+          time() - hdt_backup_last_success_timestamp_seconds{kind="wal"} > 900
+          or hdt_backup_wal_pending_files > 50
+        for: 5m
+        labels:
+          hdt_kind: backup_stale
+          severity: critical
+        annotations:
+          summary: "WAL shipping is behind"
+          description: "Archived WAL segments are not leaving the host (last success more than 15 minutes ago or more than 50 segments pending); point-in-time recovery would lose data (runbook: backups)."
+
+      - alert: BackupNeverRan
+        expr: absent(hdt_backup_last_success_timestamp_seconds{kind="wal"})
+        for: 30m
+        labels:
+          hdt_kind: backup_stale
+          severity: critical
+        annotations:
+          summary: "The backup service has never reported"
+          description: "No backup status has been exported for 30 minutes: the backup container is not running or cannot write its status file (runbook: backups)."
+
+      - alert: RestoreDrillOverdue
+        expr: time() - hdt_backup_last_success_timestamp_seconds{kind="restore_test"} > 35 * 86400
+        for: 1h
+        labels:
+          hdt_kind: backup_stale
+          severity: warning
+        annotations:
+          summary: "Last restore drill was {{ $value | humanizeDuration }} ago"
+          description: "The monthly restore drill is overdue. Run it and record it with `hdt-backup restore-tested` (runbook: restore drill)."
+
+      - alert: RestoreDrillNeverRecorded
+        expr: absent(hdt_backup_last_success_timestamp_seconds{kind="restore_test"})
+        for: 48h
+        labels:
+          hdt_kind: backup_stale
+          severity: warning
+        annotations:
+          summary: "No restore drill has been recorded"
+          description: "No passed restore drill is recorded on this host. Run one as soon as the first daily backup exists and record it with `hdt-backup restore-tested` (runbook: restore drill)."

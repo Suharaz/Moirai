@@ -1,0 +1,57 @@
+# Scorer parameters (phase 08, Design Contract section 4). Weight floor / ceilings live in council.yaml.
+schema_version: 1
+
+interval_s: 300                   # scoring cycle: resolve due labels, rescore, audit, reflect
+loss_clip: [0.02, 0.98]           # log-loss on clipped probabilities
+
+hedge:
+  # Chosen with the synthetic oracle test (python -m hdt.scoring.oracle): on 100 seeds the oracle reaches
+  # w >= 0.30 by forecast 127 at worst (<= 150) and no noise agent exceeds 0.190 (<= 1/6 + 0.03).
+  eta: 0.13
+  fixed_share_alpha: 0.01         # applied once per UTC day
+  regime_shrink_n: 50             # regime offset weight lambda = n / (n + 50)
+
+trust:
+  kappa_a: 0.05                   # a <- clip(a + kappa_a * (loss_model - loss_llm), 0, 1)
+  kappa_r: 0.05                   # r <- clip(r - kappa_r * (loss_final - loss_round1), 0, 1)
+
+calibration:
+  window_days: 90                 # rolling fit window, purged with an embargo of one horizon
+  min_samples: 100                # below this the calibration stays identity and b = 0
+  bins: 10                        # reliability chart bins
+  intercept_bound: 1.0            # |b| <= 1 logit
+
+claims_audit:
+  window_days: 7
+  max_wrong_rate: 0.05            # more than 5% penalized claims (verifier PENALIZED set) raises a warning
+  min_claims: 20                  # rate is judged only on at least this many claims
+  flagged_ceiling: 0.20           # weight ceiling of a flagged agent until reviewed
+
+reflection:
+  enabled: true
+  ab_min_forecasts: 50            # paired independent forecasts before the A/B verdict
+  bootstrap_resamples: 2000
+  bootstrap_seed: 20260927
+  max_reason_chars: 1000
+
+stacking:
+  enabled: true                   # still needs >= min_outcomes and an out-of-sample win over the log pool
+  min_outcomes: 300
+  folds: 5
+  max_depth: 3
+  n_estimators: 150
+  learning_rate: 0.05
+  min_child_samples: 20
+  seed: 7
+
+barrier:                          # triple-barrier stacking target, ATR = packet atr_1h at as_of
+  tp_atr: 1.5
+  sl_atr: 1.0
+
+resolver:
+  label_delay_s: 300              # lake records of as_of + horizon (+ max mark gap) are in by then
+  missing_after_h: 6              # keep retrying a missing mark this long, then record the label missing
+  batch: 500
+  kline_fetch_lag_s: 3600         # B2 fetches mark_price_klines hourly: the kline fallback lands up to 1 h late
+  missing_retry_h: 72             # a missing / error label is re-resolved (point in time marks) this long after horizon
+  missing_retry_interval_s: 3600  # at most one re-resolution attempt per label per interval

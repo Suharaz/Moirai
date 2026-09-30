@@ -1,0 +1,12 @@
+# sops configuration for bootstrap secrets (per-role DSNs, Redis ACL passwords, scope private keys,
+# session secret, OrderIntent signing key, TLS). Plaintext files in secrets/ are git-ignored; only the
+# encrypted form secrets/*.enc.yaml may be committed.
+#
+# Every value is encrypted (no encrypted_regex / unencrypted_suffix), so a key name that does not match
+# a naming convention can never be left in plaintext.
+#
+# Recipients are age public keys supplied at encryption time through the SOPS_AGE_RECIPIENTS
+# environment variable (the owner's key generated with `age-keygen` on the VPS and a backup key held
+# offline). They are intentionally not written here so no key material is tied to this repository.
+creation_rules:
+  - path_regex: secrets/.*\.enc\.yaml$

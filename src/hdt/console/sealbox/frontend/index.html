@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- connect-src 'none': this frame cannot send anything over the network; the only way out is the
+     postMessage of the sealed result to the console page. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; font-src 'self'; img-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Seal a secret</title>
+<link rel="stylesheet" href="sealbox.css">
+</head>
+<body>
+<main id="root" class="sb"></main>
+<script src="vendor/libsodium-sumo.js"></script>
+<script src="vendor/libsodium-wrappers-sumo.js"></script>
+<script src="sealcore.js"></script>
+<script src="sealbox.js"></script>
+</body>
+</html>

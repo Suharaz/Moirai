@@ -1,0 +1,4 @@
+# News and veto-scan data sources: CoinMarketCap content routes and recorded Binance announcements.
+# The full-text news feed host is added here when phase 07 selects it.
+pro-api.coinmarketcap.com
+www.binance.com

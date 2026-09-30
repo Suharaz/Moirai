@@ -1,0 +1,1203 @@
+{
+  "accounts": [
+    {
+      "account": "testnet",
+      "change_30d": 360.0,
+      "change_30d_fraction": 0.03557312252964427,
+      "closed_trades": [
+        {
+          "closed_at": "2026-09-26T08:00:00.000000Z",
+          "entry_price": 1.742,
+          "event_id": "EVT-CLOSED",
+          "exit_price": 1.7838,
+          "exit_reason": "time_stop",
+          "fees_funding_usd": -0.62,
+          "liquidation_price": 1.2,
+          "opened_at": "2026-09-25T20:00:00.000000Z",
+          "qty": 100.0,
+          "r_multiple": 1.02,
+          "realized_pnl": 16.4,
+          "side": "LONG",
+          "stop_price": 1.701,
+          "symbol": "OPUSDT",
+          "tp1_price": 1.804
+        }
+      ],
+      "day_start_equity": 10000.0,
+      "drawdown_fraction": 0.0,
+      "equity": 10480.0,
+      "equity_as_of": "2026-09-27T12:00:00.000000Z",
+      "equity_daily": [
+        {
+          "equity": 10459.0,
+          "t": "2026-09-25T18:00:00.000000Z"
+        },
+        {
+          "equity": 10471.0,
+          "t": "2026-09-26T18:00:00.000000Z"
+        },
+        {
+          "equity": 10480.0,
+          "t": "2026-09-27T12:00:00.000000Z"
+        }
+      ],
+      "equity_hourly_30d": [
+        {
+          "equity": 10474.0,
+          "t": "2026-09-27T00:00:00.000000Z"
+        },
+        {
+          "equity": 10477.0,
+          "t": "2026-09-27T06:00:00.000000Z"
+        },
+        {
+          "equity": 10480.0,
+          "t": "2026-09-27T12:00:00.000000Z"
+        }
+      ],
+      "open_positions": [
+        {
+          "entry_price": 147.8,
+          "event_id": "EVT-OPEN",
+          "is_hedge_book": false,
+          "leverage": 3,
+          "liquidation_price": 99.0,
+          "margin_type": "ISOLATED",
+          "mark_price": 150.1,
+          "opened_at": "2026-09-26T22:00:00.000000Z",
+          "qty": 5.0,
+          "side": "LONG",
+          "stop_price": 142.0,
+          "symbol": "SOLUSDT",
+          "time_stop_at": "2026-09-27T10:00:00.000000Z",
+          "tp1_price": 160.0,
+          "unrealized_pnl": 11.59
+        },
+        {
+          "entry_price": 65000.0,
+          "event_id": null,
+          "is_hedge_book": true,
+          "leverage": 3,
+          "liquidation_price": 90000.0,
+          "margin_type": "ISOLATED",
+          "mark_price": 64900.0,
+          "opened_at": "2026-09-24T12:00:00.000000Z",
+          "qty": 0.01,
+          "side": "SHORT",
+          "stop_price": null,
+          "symbol": "BTCUSDT",
+          "time_stop_at": null,
+          "tp1_price": null,
+          "unrealized_pnl": 1.0
+        }
+      ],
+      "orders": [
+        {
+          "avg_price": null,
+          "created_at": "2026-09-26T22:00:01.000000Z",
+          "event_id": "EVT-OPEN",
+          "executed_qty": null,
+          "leg": "sl",
+          "order_type": "STOP_MARKET",
+          "price": 142.0,
+          "qty": null,
+          "reduce_only": true,
+          "side": "SELL",
+          "status": "NEW",
+          "symbol": "SOLUSDT",
+          "updated_at": "2026-09-26T22:00:01.000000Z"
+        },
+        {
+          "avg_price": 147.6,
+          "created_at": "2026-09-26T22:00:00.000000Z",
+          "event_id": "EVT-OPEN",
+          "executed_qty": 5.0,
+          "leg": "entry",
+          "order_type": "LIMIT",
+          "price": 147.8,
+          "qty": 5.0,
+          "reduce_only": false,
+          "side": "BUY",
+          "status": "FILLED",
+          "symbol": "SOLUSDT",
+          "updated_at": "2026-09-26T22:00:00.000000Z"
+        }
+      ],
+      "today_pnl": 480.0,
+      "today_pnl_fraction": 0.048,
+      "trade_stats_30d": {
+        "avg_r": 1.02,
+        "closed": 1,
+        "fees_funding_usd": -0.62,
+        "realized_pnl": 16.4,
+        "wins": 1
+      }
+    }
+  ],
+  "agents": [
+    {
+      "agents": [
+        {
+          "a": 0.9,
+          "agent": "crowding",
+          "coverage": 0.97,
+          "forecasts": 214,
+          "llm_cost_30d": 0.012,
+          "log_loss_30d": null,
+          "model_slug": "openai/gpt-4.1-mini",
+          "r": 0.6,
+          "rejected_claims_fraction": null,
+          "version": 2,
+          "w": 0.2,
+          "w_capped": 0.2
+        },
+        {
+          "a": null,
+          "agent": "technical",
+          "coverage": null,
+          "forecasts": null,
+          "llm_cost_30d": null,
+          "log_loss_30d": null,
+          "model_slug": null,
+          "r": null,
+          "rejected_claims_fraction": 0.0,
+          "version": null,
+          "w": null,
+          "w_capped": null
+        },
+        {
+          "a": null,
+          "agent": "micro",
+          "coverage": null,
+          "forecasts": null,
+          "llm_cost_30d": null,
+          "log_loss_30d": null,
+          "model_slug": null,
+          "r": null,
+          "rejected_claims_fraction": null,
+          "version": null,
+          "w": null,
+          "w_capped": null
+        },
+        {
+          "a": null,
+          "agent": "fundamental",
+          "coverage": null,
+          "forecasts": null,
+          "llm_cost_30d": null,
+          "log_loss_30d": null,
+          "model_slug": null,
+          "r": null,
+          "rejected_claims_fraction": null,
+          "version": null,
+          "w": null,
+          "w_capped": null
+        },
+        {
+          "a": null,
+          "agent": "news",
+          "coverage": null,
+          "forecasts": null,
+          "llm_cost_30d": null,
+          "log_loss_30d": null,
+          "model_slug": null,
+          "r": null,
+          "rejected_claims_fraction": null,
+          "version": null,
+          "w": null,
+          "w_capped": null
+        },
+        {
+          "a": null,
+          "agent": "macro",
+          "coverage": null,
+          "forecasts": null,
+          "llm_cost_30d": null,
+          "log_loss_30d": null,
+          "model_slug": null,
+          "r": null,
+          "rejected_claims_fraction": null,
+          "version": null,
+          "w": null,
+          "w_capped": null
+        }
+      ],
+      "calibration": [
+        {
+          "agent": "pooled",
+          "bins": [
+            {
+              "bin_hi": 0.6,
+              "bin_lo": 0.5,
+              "mean_p": 0.55,
+              "n": 187,
+              "observed_rate": 0.57
+            }
+          ],
+          "computed_at": "2026-09-26T12:00:00.000000Z",
+          "ece": 0.041,
+          "n": 187,
+          "spiegelhalter_z": 0.84
+        }
+      ],
+      "target_type": "RESID_12H",
+      "version_changes": [
+        {
+          "agent": "crowding",
+          "at": "2026-09-22T12:00:00.000000Z",
+          "version": 2
+        }
+      ],
+      "weight_history": [
+        {
+          "agent": "crowding",
+          "day": "2026-09-26",
+          "w": 0.2
+        }
+      ]
+    },
+    {
+      "agents": [
+        {
+          "a": null,
+          "agent": "crowding",
+          "coverage": null,
+          "forecasts": null,
+          "llm_cost_30d": 0.012,
+          "log_loss_30d": null,
+          "model_slug": "openai/gpt-4.1-mini",
+          "r": null,
+          "rejected_claims_fraction": null,
+          "version": 2,
+          "w": null,
+          "w_capped": null
+        },
+        {
+          "a": null,
+          "agent": "technical",
+          "coverage": null,
+          "forecasts": null,
+          "llm_cost_30d": null,
+          "log_loss_30d": null,
+          "model_slug": null,
+          "r": null,
+          "rejected_claims_fraction": 0.0,
+          "version": null,
+          "w": null,
+          "w_capped": null
+        },
+        {
+          "a": null,
+          "agent": "micro",
+          "coverage": null,
+          "forecasts": null,
+          "llm_cost_30d": null,
+          "log_loss_30d": null,
+          "model_slug": null,
+          "r": null,
+          "rejected_claims_fraction": null,
+          "version": null,
+          "w": null,
+          "w_capped": null
+        },
+        {
+          "a": null,
+          "agent": "fundamental",
+          "coverage": null,
+          "forecasts": null,
+          "llm_cost_30d": null,
+          "log_loss_30d": null,
+          "model_slug": null,
+          "r": null,
+          "rejected_claims_fraction": null,
+          "version": null,
+          "w": null,
+          "w_capped": null
+        },
+        {
+          "a": null,
+          "agent": "news",
+          "coverage": null,
+          "forecasts": null,
+          "llm_cost_30d": null,
+          "log_loss_30d": null,
+          "model_slug": null,
+          "r": null,
+          "rejected_claims_fraction": null,
+          "version": null,
+          "w": null,
+          "w_capped": null
+        },
+        {
+          "a": null,
+          "agent": "macro",
+          "coverage": null,
+          "forecasts": null,
+          "llm_cost_30d": null,
+          "log_loss_30d": null,
+          "model_slug": null,
+          "r": null,
+          "rejected_claims_fraction": null,
+          "version": null,
+          "w": null,
+          "w_capped": null
+        }
+      ],
+      "calibration": [],
+      "target_type": "RAW_12H",
+      "version_changes": [
+        {
+          "agent": "crowding",
+          "at": "2026-09-22T12:00:00.000000Z",
+          "version": 2
+        }
+      ],
+      "weight_history": []
+    }
+  ],
+  "costs": {
+    "by_model": [
+      {
+        "calls": 1,
+        "completion_tokens": 300,
+        "cost_usd": 0.004,
+        "model_slug": "google/gemini-2.5-flash",
+        "prompt_tokens": 5000
+      },
+      {
+        "calls": 1,
+        "completion_tokens": 200,
+        "cost_usd": 0.012,
+        "model_slug": "openai/gpt-4.1-mini",
+        "prompt_tokens": 1000
+      }
+    ],
+    "by_pipeline": [
+      {
+        "cost_usd": 0.012,
+        "pipeline": "council"
+      },
+      {
+        "cost_usd": 0.004,
+        "pipeline": "news"
+      }
+    ],
+    "by_role": [
+      {
+        "calls": 1,
+        "completion_tokens": 200,
+        "cost_usd": 0.012,
+        "models": [
+          "openai/gpt-4.1-mini"
+        ],
+        "prompt_tokens": 1000,
+        "role": "crowding"
+      },
+      {
+        "calls": 1,
+        "completion_tokens": 300,
+        "cost_usd": 0.004,
+        "models": [
+          "google/gemini-2.5-flash"
+        ],
+        "prompt_tokens": 5000,
+        "role": "news_extractor"
+      }
+    ],
+    "daily": [
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-08-29"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-08-30"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-08-31"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-01"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-02"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-03"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-04"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-05"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-06"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-07"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-08"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-09"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-10"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-11"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-12"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-13"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-14"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-15"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-16"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-17"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-18"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-19"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-20"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-21"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-22"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-23"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-24"
+      },
+      {
+        "calls": 1,
+        "cost_usd": 0.012,
+        "day": "2026-09-25"
+      },
+      {
+        "calls": 0,
+        "cost_usd": 0.0,
+        "day": "2026-09-26"
+      },
+      {
+        "calls": 1,
+        "cost_usd": 0.004,
+        "day": "2026-09-27"
+      }
+    ],
+    "last_30d": {
+      "calls": 2,
+      "cost_usd": 0.016,
+      "council_cost_usd": 0.012,
+      "council_events": 1
+    },
+    "today": {
+      "calls": 1,
+      "cost_usd": 0.004
+    }
+  },
+  "decision_cards": [
+    {
+      "as_of": "2026-09-27T10:00:00.000000Z",
+      "claims": [],
+      "consensus": [
+        {
+          "passed": true,
+          "text": "Quorum: 6 agents with an opinion"
+        }
+      ],
+      "disagreement": 0.2,
+      "event_id": "EVT-YOUNG",
+      "forecasts": [],
+      "hit": false,
+      "label": "down",
+      "levels": [],
+      "manager_rule": [
+        {
+          "passed": null,
+          "text": "Manager not needed"
+        }
+      ],
+      "manager_size": 1.0,
+      "orders": [],
+      "outcome": "LONG",
+      "p_pooled": 0.65,
+      "risk": [],
+      "rounds": 2,
+      "side": "LONG",
+      "source": "LTX",
+      "stop_reason": "no_new_claims",
+      "summary": "The blind round already had a 2/3 weighted majority.",
+      "symbol": "ARBUSDT",
+      "target_type": "RESID_12H",
+      "timeline": [
+        {
+          "at": "2026-09-27T10:00:00.000000Z",
+          "text": "Scanner emitted a LTX candidate",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-27T10:00:00.000000Z",
+          "text": "Risk: approved, sizing 0.8% of equity",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-27T10:00:00.000000Z",
+          "text": "Verdict: APPROVED",
+          "tone": "pos"
+        }
+      ],
+      "trades": [],
+      "unscored": false,
+      "usage": null
+    },
+    {
+      "as_of": "2026-09-26T23:00:00.000000Z",
+      "claims": [],
+      "consensus": [
+        {
+          "passed": true,
+          "text": "Quorum: 6 agents with an opinion"
+        }
+      ],
+      "disagreement": 0.2,
+      "event_id": "EVT-SOL-EARLIER",
+      "forecasts": [],
+      "hit": true,
+      "label": "up",
+      "levels": [],
+      "manager_rule": [
+        {
+          "passed": null,
+          "text": "Manager not needed"
+        }
+      ],
+      "manager_size": 0.0,
+      "orders": [],
+      "outcome": "NO_TRADE",
+      "p_pooled": 0.65,
+      "risk": [],
+      "rounds": 2,
+      "side": null,
+      "source": "LTX",
+      "stop_reason": "no_new_claims",
+      "summary": "The blind round already had a 2/3 weighted majority.",
+      "symbol": "SOLUSDT",
+      "target_type": "RESID_12H",
+      "timeline": [
+        {
+          "at": "2026-09-26T23:00:00.000000Z",
+          "text": "Scanner emitted a LTX candidate",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-26T23:00:00.000000Z",
+          "text": "Risk: approved, sizing 0.8% of equity",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-26T23:00:00.000000Z",
+          "text": "Verdict: APPROVED",
+          "tone": "pos"
+        }
+      ],
+      "trades": [],
+      "unscored": false,
+      "usage": null
+    },
+    {
+      "as_of": "2026-09-26T21:00:00.000000Z",
+      "claims": [],
+      "consensus": [
+        {
+          "passed": true,
+          "text": "Quorum: 6 agents with an opinion"
+        }
+      ],
+      "disagreement": 0.2,
+      "event_id": "EVT-OPEN",
+      "forecasts": [],
+      "hit": true,
+      "label": "up",
+      "levels": [],
+      "manager_rule": [
+        {
+          "passed": null,
+          "text": "Manager not needed"
+        }
+      ],
+      "manager_size": 1.0,
+      "orders": [
+        {
+          "account": "testnet",
+          "avg_price": 147.6,
+          "created_at": "2026-09-26T22:00:00.000000Z",
+          "executed_qty": 5.0,
+          "leg": "entry",
+          "order_type": "LIMIT",
+          "price": 147.8,
+          "qty": 5.0,
+          "reduce_only": false,
+          "side": "BUY",
+          "status": "FILLED",
+          "symbol": "SOLUSDT",
+          "updated_at": "2026-09-26T22:00:00.000000Z"
+        },
+        {
+          "account": "testnet",
+          "avg_price": null,
+          "created_at": "2026-09-26T22:00:01.000000Z",
+          "executed_qty": null,
+          "leg": "sl",
+          "order_type": "STOP_MARKET",
+          "price": 142.0,
+          "qty": null,
+          "reduce_only": true,
+          "side": "SELL",
+          "status": "NEW",
+          "symbol": "SOLUSDT",
+          "updated_at": "2026-09-26T22:00:01.000000Z"
+        }
+      ],
+      "outcome": "LONG",
+      "p_pooled": 0.65,
+      "risk": [
+        {
+          "account": "live",
+          "applied_action": null,
+          "council_action": "OPEN",
+          "decided_at": "2026-09-26T22:00:00.000000Z",
+          "reason": "operational_limit",
+          "result": "rejected"
+        },
+        {
+          "account": "testnet",
+          "applied_action": "OPEN",
+          "council_action": "OPEN",
+          "decided_at": "2026-09-26T22:00:00.000000Z",
+          "reason": null,
+          "result": "approved"
+        }
+      ],
+      "rounds": 2,
+      "side": "LONG",
+      "source": "LTX",
+      "stop_reason": "no_new_claims",
+      "summary": "The blind round already had a 2/3 weighted majority.",
+      "symbol": "SOLUSDT",
+      "target_type": "RESID_12H",
+      "timeline": [
+        {
+          "at": "2026-09-26T21:00:00.000000Z",
+          "text": "Scanner emitted a LTX candidate",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-26T21:00:00.000000Z",
+          "text": "Risk: approved, sizing 0.8% of equity",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-26T21:00:00.000000Z",
+          "text": "Verdict: APPROVED",
+          "tone": "pos"
+        }
+      ],
+      "trades": [
+        {
+          "account": "testnet",
+          "closed_at": null,
+          "entry_price": 147.8,
+          "exit_price": null,
+          "exit_reason": null,
+          "fees_funding_usd": 0.0,
+          "opened_at": "2026-09-26T22:00:00.000000Z",
+          "r_multiple": null,
+          "realized_pnl": 0.0,
+          "side": "LONG",
+          "stop_price": 142.0,
+          "symbol": "SOLUSDT",
+          "tp1_price": 160.0
+        }
+      ],
+      "unscored": false,
+      "usage": null
+    },
+    {
+      "as_of": "2026-09-26T16:00:00.000000Z",
+      "claims": [],
+      "consensus": [
+        {
+          "passed": true,
+          "text": "Quorum: 6 agents with an opinion"
+        }
+      ],
+      "disagreement": 0.2,
+      "event_id": "EVT-HELD",
+      "forecasts": [],
+      "hit": null,
+      "label": null,
+      "levels": [],
+      "manager_rule": [
+        {
+          "passed": null,
+          "text": "Manager not needed"
+        }
+      ],
+      "manager_size": 0.0,
+      "orders": [],
+      "outcome": "HOLD",
+      "p_pooled": 0.65,
+      "risk": [],
+      "rounds": 2,
+      "side": "LONG",
+      "source": "HELD",
+      "stop_reason": "no_new_claims",
+      "summary": "The blind round already had a 2/3 weighted majority.",
+      "symbol": "ARBUSDT",
+      "target_type": "RESID_12H",
+      "timeline": [
+        {
+          "at": "2026-09-26T16:00:00.000000Z",
+          "text": "Scanner emitted a LTX candidate",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-26T16:00:00.000000Z",
+          "text": "Risk: approved, sizing 0.8% of equity",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-26T16:00:00.000000Z",
+          "text": "Verdict: APPROVED",
+          "tone": "pos"
+        }
+      ],
+      "trades": [],
+      "unscored": true,
+      "usage": null
+    },
+    {
+      "as_of": "2026-09-26T06:00:00.000000Z",
+      "claims": [],
+      "consensus": [
+        {
+          "passed": true,
+          "text": "Quorum: 6 agents with an opinion"
+        }
+      ],
+      "disagreement": 0.2,
+      "event_id": "EVT-UNLABELED",
+      "forecasts": [],
+      "hit": null,
+      "label": null,
+      "levels": [],
+      "manager_rule": [
+        {
+          "passed": null,
+          "text": "Manager not needed"
+        }
+      ],
+      "manager_size": 1.0,
+      "orders": [],
+      "outcome": "LONG",
+      "p_pooled": 0.65,
+      "risk": [],
+      "rounds": 2,
+      "side": "LONG",
+      "source": "LTX",
+      "stop_reason": "no_new_claims",
+      "summary": "The blind round already had a 2/3 weighted majority.",
+      "symbol": "ARBUSDT",
+      "target_type": "RESID_12H",
+      "timeline": [
+        {
+          "at": "2026-09-26T06:00:00.000000Z",
+          "text": "Scanner emitted a LTX candidate",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-26T06:00:00.000000Z",
+          "text": "Risk: approved, sizing 0.8% of equity",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-26T06:00:00.000000Z",
+          "text": "Verdict: APPROVED",
+          "tone": "pos"
+        }
+      ],
+      "trades": [],
+      "unscored": false,
+      "usage": null
+    },
+    {
+      "as_of": "2026-09-26T06:00:00.000000Z",
+      "claims": [],
+      "consensus": [
+        {
+          "passed": true,
+          "text": "Quorum: 6 agents with an opinion"
+        }
+      ],
+      "disagreement": 0.2,
+      "event_id": "EVT-SOL-BEFORE-OPEN",
+      "forecasts": [],
+      "hit": false,
+      "label": "down",
+      "levels": [],
+      "manager_rule": [
+        {
+          "passed": null,
+          "text": "Manager not needed"
+        }
+      ],
+      "manager_size": 1.0,
+      "orders": [],
+      "outcome": "LONG",
+      "p_pooled": 0.65,
+      "risk": [],
+      "rounds": 2,
+      "side": "LONG",
+      "source": "LTX",
+      "stop_reason": "no_new_claims",
+      "summary": "The blind round already had a 2/3 weighted majority.",
+      "symbol": "SOLUSDT",
+      "target_type": "RESID_12H",
+      "timeline": [
+        {
+          "at": "2026-09-26T06:00:00.000000Z",
+          "text": "Scanner emitted a LTX candidate",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-26T06:00:00.000000Z",
+          "text": "Risk: approved, sizing 0.8% of equity",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-26T06:00:00.000000Z",
+          "text": "Verdict: APPROVED",
+          "tone": "pos"
+        }
+      ],
+      "trades": [],
+      "unscored": false,
+      "usage": null
+    },
+    {
+      "as_of": "2026-09-25T20:00:00.000000Z",
+      "claims": [
+        {
+          "hard": false,
+          "kind": "packet",
+          "reject_reason": null,
+          "round": 2,
+          "shared_id": "C-001",
+          "statement": "RSI 1h is 71",
+          "tier": null,
+          "verified": true
+        }
+      ],
+      "consensus": [
+        {
+          "passed": true,
+          "text": "Quorum: 6 agents with an opinion"
+        }
+      ],
+      "disagreement": 0.2,
+      "event_id": "EVT-CLOSED",
+      "forecasts": [
+        {
+          "abstain": false,
+          "agent": "crowding",
+          "candidate_id": "lc_AAAAAAAAAAAAAAAA",
+          "commit_sha256": "82a6dd07f25fb47a1d968a499b592eca8225d5ca0838065f0400d0b567ecfdc3",
+          "model_slug": "openai/gpt-4.1-mini",
+          "p_llm": 0.63,
+          "p_model": 0.6,
+          "p_used": 0.62,
+          "round": 1,
+          "stance": "LONG",
+          "weight_norm": 0.24
+        }
+      ],
+      "hit": true,
+      "label": "up",
+      "levels": [
+        {
+          "candidate_id": "lc_AAAAAAAAAAAAAAAA",
+          "chosen": true,
+          "entry": 1.742,
+          "invalidation": 1.701,
+          "rr": 1.5121951219512235,
+          "side": "LONG",
+          "tp1": 1.804
+        },
+        {
+          "candidate_id": "lc_BBBBBBBBBBBBBBBB",
+          "chosen": false,
+          "entry": 1.742,
+          "invalidation": 1.783,
+          "rr": 1.5121951219512235,
+          "side": "SHORT",
+          "tp1": 1.68
+        }
+      ],
+      "manager_rule": [
+        {
+          "passed": null,
+          "text": "Manager not needed"
+        }
+      ],
+      "manager_size": 1.0,
+      "orders": [],
+      "outcome": "LONG",
+      "p_pooled": 0.65,
+      "risk": [],
+      "rounds": 2,
+      "side": "LONG",
+      "source": "LTX",
+      "stop_reason": "no_new_claims",
+      "summary": "The blind round already had a 2/3 weighted majority.",
+      "symbol": "OPUSDT",
+      "target_type": "RESID_12H",
+      "timeline": [
+        {
+          "at": "2026-09-25T20:00:00.000000Z",
+          "text": "Scanner emitted a LTX candidate",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-25T20:00:00.000000Z",
+          "text": "Risk: approved, sizing 0.8% of equity",
+          "tone": ""
+        },
+        {
+          "at": "2026-09-25T20:00:00.000000Z",
+          "text": "Verdict: APPROVED",
+          "tone": "pos"
+        }
+      ],
+      "trades": [
+        {
+          "account": "testnet",
+          "closed_at": "2026-09-26T08:00:00.000000Z",
+          "entry_price": 1.742,
+          "exit_price": 1.7838,
+          "exit_reason": "time_stop",
+          "fees_funding_usd": -0.62,
+          "opened_at": "2026-09-25T20:00:00.000000Z",
+          "r_multiple": 1.02,
+          "realized_pnl": 16.4,
+          "side": "LONG",
+          "stop_price": 1.701,
+          "symbol": "OPUSDT",
+          "tp1_price": 1.804
+        }
+      ],
+      "unscored": false,
+      "usage": {
+        "agents": 1,
+        "calls": 1,
+        "cost_usd": 0.012
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "as_of": "2026-09-27T10:00:00.000000Z",
+      "disagreement": 0.2,
+      "event_id": "EVT-YOUNG",
+      "hit": false,
+      "label": "down",
+      "manager_size": 1.0,
+      "outcome": "LONG",
+      "p_pooled": 0.65,
+      "rounds": 2,
+      "source": "LTX",
+      "symbol": "ARBUSDT",
+      "unscored": false
+    },
+    {
+      "as_of": "2026-09-26T23:00:00.000000Z",
+      "disagreement": 0.2,
+      "event_id": "EVT-SOL-EARLIER",
+      "hit": true,
+      "label": "up",
+      "manager_size": 0.0,
+      "outcome": "NO_TRADE",
+      "p_pooled": 0.65,
+      "rounds": 2,
+      "source": "LTX",
+      "symbol": "SOLUSDT",
+      "unscored": false
+    },
+    {
+      "as_of": "2026-09-26T21:00:00.000000Z",
+      "disagreement": 0.2,
+      "event_id": "EVT-OPEN",
+      "hit": true,
+      "label": "up",
+      "manager_size": 1.0,
+      "outcome": "LONG",
+      "p_pooled": 0.65,
+      "rounds": 2,
+      "source": "LTX",
+      "symbol": "SOLUSDT",
+      "unscored": false
+    },
+    {
+      "as_of": "2026-09-26T16:00:00.000000Z",
+      "disagreement": 0.2,
+      "event_id": "EVT-HELD",
+      "hit": null,
+      "label": null,
+      "manager_size": 0.0,
+      "outcome": "HOLD",
+      "p_pooled": 0.65,
+      "rounds": 2,
+      "source": "HELD",
+      "symbol": "ARBUSDT",
+      "unscored": true
+    },
+    {
+      "as_of": "2026-09-26T06:00:00.000000Z",
+      "disagreement": 0.2,
+      "event_id": "EVT-UNLABELED",
+      "hit": null,
+      "label": null,
+      "manager_size": 1.0,
+      "outcome": "LONG",
+      "p_pooled": 0.65,
+      "rounds": 2,
+      "source": "LTX",
+      "symbol": "ARBUSDT",
+      "unscored": false
+    },
+    {
+      "as_of": "2026-09-26T06:00:00.000000Z",
+      "disagreement": 0.2,
+      "event_id": "EVT-SOL-BEFORE-OPEN",
+      "hit": false,
+      "label": "down",
+      "manager_size": 1.0,
+      "outcome": "LONG",
+      "p_pooled": 0.65,
+      "rounds": 2,
+      "source": "LTX",
+      "symbol": "SOLUSDT",
+      "unscored": false
+    },
+    {
+      "as_of": "2026-09-25T20:00:00.000000Z",
+      "disagreement": 0.2,
+      "event_id": "EVT-CLOSED",
+      "hit": true,
+      "label": "up",
+      "manager_size": 1.0,
+      "outcome": "LONG",
+      "p_pooled": 0.65,
+      "rounds": 2,
+      "source": "LTX",
+      "symbol": "OPUSDT",
+      "unscored": false
+    }
+  ],
+  "gates": [
+    {
+      "checks": [
+        {
+          "label": "Calibration samples",
+          "met": false,
+          "target": 100.0,
+          "value": 20.0
+        }
+      ],
+      "decided_at": null,
+      "gate": "G1",
+      "label": "LTX edge on the lake",
+      "met": false,
+      "passed": null,
+      "target": 120.0,
+      "value": 41.0
+    }
+  ],
+  "generated_at": "2026-09-27T12:00:00.000000Z",
+  "schema_version": 2,
+  "scoring": {
+    "hits_30d": 3,
+    "scored_30d": 5
+  }
+}

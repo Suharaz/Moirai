@@ -1,0 +1,33 @@
+# Per-agent, per-target p_model coefficients: config/p_model/<agent>.<target_type>.yaml (labels are never
+# pooled across target types). Written by scripts/fit_p_model.py as a new versioned file, promoted by review.
+schema_version: 1
+agent: fundamental
+p_model_ver: fundamental-resid_12h-pm0
+target_type: RESID_12H
+label_spec_version: lbl1
+fit_window_start: null
+fit_window_end: null
+sample_count: 0
+oos_logloss: null
+intercept: 0.0
+coefficients:
+  oi_mcap: 0.0
+  oi_volume_turnover: 0.0
+  circ_total_supply: 0.0
+  holder_top10_share: 0.0
+  sec_risk_hits: 0.0
+standardization:                # identity until the first fit (no lake samples yet)
+  oi_mcap: {mean: 0.0, std: 1.0}
+  oi_volume_turnover: {mean: 0.0, std: 1.0}
+  circ_total_supply: {mean: 0.0, std: 1.0}
+  holder_top10_share: {mean: 0.0, std: 1.0}
+  sec_risk_hits: {mean: 0.0, std: 1.0}
+families:
+  turnover: [oi_mcap, oi_volume_turnover]
+  supply: [circ_total_supply]
+  dex: [holder_top10_share, sec_risk_hits]
+shrunk_families: [turnover, supply, dex]
+note: >-
+  Not fitted: gate G1 has not run on the recorded lake yet, so every feature family lacks data and
+  all coefficients are shrunk to 0 (p_model = sigmoid(0) = 0.5, the uninformed base rate). The first
+  fit (scripts/fit_p_model.py, L2 logistic, walk-forward) writes a new versioned file for review.

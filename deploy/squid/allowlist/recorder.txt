@@ -1,0 +1,5 @@
+# Recorder: CoinMarketCap REST + WebSocket and Binance USDS-M public REST + WebSocket.
+pro-api.coinmarketcap.com
+pro-stream.coinmarketcap.com
+fapi.binance.com
+fstream.binance.com

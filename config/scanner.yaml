@@ -1,0 +1,37 @@
+# Scanner rules, event budget and label spec (phase 03). All thresholds are starting values tuned at
+# gate G1 on the self-recorded lake. Changing any value requires a new rule_version.
+schema_version: 1
+rule_version: s2               # s2: max_candidates_per_day 24 -> 40 (LTX universe 60 -> 100)
+
+cadence_s: 300                  # follows the CMC liquidation route cycle
+run_delay_s: 30                 # evaluate after that cycle's CMC batch has closed
+superset_enabled: false         # true in shadow: also emit loose-only candidates (phase 06: superset_only)
+held_reeval_min: 120            # held coins are re-emitted as HELD at most this often
+max_candidates_per_day: 40     # 24 at s1; raised with the LTX universe (60 -> 100 coins)
+
+ltx:                            # LONG as written; SHORT symmetric (Skew4 <= 1 - skew4_min, funding rises)
+  strict: {skew4_min: 0.6, spike_min: 4.0, decay_max: 0.35, fdz_min: 1.5, doi4_max: -0.06, funding_drop_min: 0.5}
+  loose: {skew4_min: 0.55, spike_min: 2.5, decay_max: 0.5, fdz_min: 1.0, doi4_max: -0.04, funding_drop_min: 0.3}
+
+migration:                      # side: SHORT when the peripheral basis is richer than core (BG > 0), else LONG
+  strict: {sp_min: 0.2, zm_min: 2.0, g_min: 0.05, bg_abs_min: 0.001}
+  loose: {sp_min: 0.1, zm_min: 1.5, g_min: 0.02, bg_abs_min: 0.0005}
+
+spike:                          # den = max((L24h - L4h) / 20, floor_c), floor_c = max(liq_floor_usd, q20)
+  liq_floor_usd: 50000
+  floor_quantile: 0.2
+  floor_window_days: 30
+  min_liq_notional_usd: 250000  # SPIKE valid only when L4h - L1h >= this ...
+  min_liq_oi_frac: 0.002        # ... and >= this fraction of OI(t - 4 h)
+
+contagion:                      # no LTX while B >= b_block on that side and BTC has not flushed yet
+  b_block: 0.40
+  breadth_spike_min: 2.5        # a coin counts toward B when its SPIKE >= this with the same skew side
+  btc_flush_spike_min: 4.0      # BTC flushed = SPIKE >= this ...
+  btc_flush_decay_max: 0.35     # ... and DECAY <= this on the same side
+
+labels:                         # Design Contract section 4; the horizon is council.yaml horizon_h
+  label_spec_version: lbl1
+  reference_horizons_h: [4, 8, 24]
+  mark_interval: 1m             # Binance mark price klines
+  max_mark_gap_s: 120           # no mark within this of a label time: the label is missing, never guessed

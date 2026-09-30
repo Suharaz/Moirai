@@ -1,0 +1,23 @@
+Self-hosted console fonts (latin subset only; all UI copy is English). Served by Streamlit static file
+serving at app/static/fonts/ and registered in src/hdt/console/.streamlit/config.toml, so the console
+never requests a third-party font.
+
+Fira Sans 400/500/600/700: npm @fontsource/fira-sans@5.3.0 files/fira-sans-latin-<weight>-normal.woff2
+  npm integrity sha512-z1SKSG7eRhm3srlb7rQ3j77QP4TP7OFxCZ4wUWhCdt+3hOF9K0AyvybpAsz6+JWNcCVV7AqC7dbOT3e67P2r5A==
+  license SIL Open Font License 1.1 (LICENSE-FiraSans-OFL.txt)
+Fira Code 400/500/600: npm @fontsource/fira-code@5.3.0 files/fira-code-latin-<weight>-normal.woff2
+  npm integrity sha512-EJL968RJRkakubAj/coU8pSUaeTE5UNoRjtzAr6kGiSZ3jWuN8/AKWHwym/PFUaQL1q7IL/H+EXs4358YhrTBQ==
+  license SIL Open Font License 1.1 (LICENSE-FiraCode-OFL.txt)
+Cinzel 600 (headings and the wordmark): npm @fontsource/cinzel@5.3.0 files/cinzel-latin-600-normal.woff2
+  npm integrity sha512-KEOYTsrRppW0uRIPWBDPrQgunCS6f8u4nzZxYRBfo9SCknKojLYjK7B0ZoVmJhyVLefz271ZQRF9EOpHZlfhRw==
+  license SIL Open Font License 1.1 (LICENSE-Cinzel-OFL.txt)
+
+sha256
+3e38d8c01fe97529fbf0a086bf958d724b723ca7fc8be77b4ba5745f6259b6ca  fira-sans-latin-400-normal.woff2
+88d3e420adee3fa99ae50c15b123e3c9a07ce0ec0c03a01bd6bdd5232822da28  fira-sans-latin-500-normal.woff2
+55e09735e30d8492afac5d59ac433c6b367bb7dd00c46e157cfe95c9fb29e833  fira-sans-latin-600-normal.woff2
+c753d7153cac2cfeb877264d18f11197ca672d3e04ba1472154a54777a4e354d  fira-sans-latin-700-normal.woff2
+6dc9da171ccea71d525379ee1cbf51d143e31acac330a251bb71b3d6060e687c  fira-code-latin-400-normal.woff2
+9e4da5ad2c147be02544df5a732d22830a82b1e9800dc06267ba656f5c40f7e9  fira-code-latin-500-normal.woff2
+53bd904d81c086b103b9e01ef84a98640b2124b78c789bb47ddabb4c41fc94b2  fira-code-latin-600-normal.woff2
+61efc27ceb7d08bb841652fa8979c0b6833b92548b7f9544c07968a6c02f28e4  cinzel-latin-600-normal.woff2

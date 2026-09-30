@@ -1,0 +1,22 @@
+# Build context for services/*/Dockerfile. Secrets, local data and development artefacts never enter an image.
+.git
+.github
+.venv
+**/__pycache__
+**/*.py[cod]
+.mypy_cache
+.ruff_cache
+.pytest_cache
+.hypothesis
+.coverage
+htmlcov
+.env
+.env.*
+secrets
+data
+reports
+docs
+tests
+deploy/redis/users.acl
+**/.streamlit/secrets.toml
+node_modules

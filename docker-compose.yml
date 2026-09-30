@@ -1,0 +1,1178 @@
+# Production stack (phase 10). Usage on the VPS (docs/deployment-guide.md section 3):
+#   uv run python scripts/gen_prod_secrets.py        # secrets/ (plus the operator-provided files it lists)
+#   docker compose --env-file .env.prod build
+#   docker compose --env-file .env.prod up -d        # every service whose code exists
+#   docker compose --env-file .env.prod --profile council --profile news --profile scoring \
+#     --profile trading up -d                        # later phases, once their code is merged
+#   docker compose --env-file .env.prod --profile testnet-driver run --rm testnet-driver [ARGS]
+#                                                    # one-shot testnet lifecycle check (never restarted)
+#
+# Networks (tests/integration/test_public_isolation.py asserts these rules):
+# - Every network is `internal` (no route out of the host) except net_ingress (caddy: public 443 + ACME),
+#   net_egress (the two allowlist proxies) and net_admin (Tailscale-bound admin UIs; IP masquerading is
+#   off, so containers on it cannot open connections to the internet).
+# - net_data: Postgres, Redis and the services that need them. Never published.
+# - net_proxy: trading-side services -> egress-proxy (fixed client IPs, per-client allowlists in
+#   deploy/squid). net_fetch: council -> fetcher -> egress-fetch; the fetcher is on nothing else.
+# - Networks with fixed addresses keep them below .128: Docker hands out dynamic addresses only from the
+#   upper half (ip_range), so a restarted container can never take over an address Squid or config-api
+#   trusts.
+# - Public path: caddy -(net_edge)-> dashboard -(net_store_read, read-only user)-> public-store
+#   <-(net_store_write)- public-publisher. The dashboard has no route to Postgres, Redis, config-api,
+#   console, execution or the vault, and holds only read-only store credentials.
+# - net_trace: LLM callers -> langfuse-web. net_langfuse: Langfuse and its own stores.
+# - net_monitor: prometheus, grafana, alertmanager, node-exporter, the Postgres and Redis exporters and
+#   the internal prober (blackbox: config-api, console, egress-proxy). Every monitoring component that
+#   also sits on another network listens only on its fixed net_monitor address. net_probe_edge:
+#   prometheus -> blackbox-edge, the prober of caddy and the dashboard on net_edge (nothing else is on
+#   net_edge besides caddy and the dashboard). net_console: console -> config-api.
+# Only caddy publishes on all interfaces (443); console, Grafana and Langfuse publish on the Tailscale IP.
+# Secrets are files under secrets/ mounted as docker secrets and read through NAME_FILE variables.
+# Images are pinned by digest; Python services build FROM the shared base image (service hdt-base).
+
+name: hdt
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
+# Every container is capped (M15): the defaults below, raised per service where the workload needs it.
+x-hardened: &hardened
+  restart: unless-stopped
+  mem_limit: 512m
+  pids_limit: 256
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  tmpfs: ["/tmp:size=256m,mode=1777"]
+  logging: *logging
+
+x-app: &app
+  <<: *hardened
+  init: true
+  stop_grace_period: 30s
+
+x-build-app: &build-app
+  context: .
+  additional_contexts:
+    base: service:hdt-base
+
+x-egress-env: &egress-env
+  HTTP_PROXY: http://egress-proxy:3128
+  HTTPS_PROXY: http://egress-proxy:3128
+  http_proxy: http://egress-proxy:3128
+  https_proxy: http://egress-proxy:3128
+  NO_PROXY: localhost,127.0.0.1,postgres,redis,prometheus,langfuse-web,fetcher
+  no_proxy: localhost,127.0.0.1,postgres,redis,prometheus,langfuse-web,fetcher
+
+x-langfuse-client-env: &langfuse-client-env
+  LANGFUSE_BASE_URL: http://langfuse-web:3000
+  LANGFUSE_PUBLIC_KEY_FILE: /run/secrets/langfuse_public_key
+  LANGFUSE_SECRET_KEY_FILE: /run/secrets/langfuse_secret_key
+
+x-langfuse-env: &langfuse-env
+  TELEMETRY_ENABLED: "false"
+  # V8 otherwise caps the heap near half the cgroup limit, which langfuse-web outgrows at start-up.
+  NODE_OPTIONS: --max-old-space-size=1536
+  CLICKHOUSE_MIGRATION_URL: clickhouse://langfuse-clickhouse:9000
+  CLICKHOUSE_URL: http://langfuse-clickhouse:8123
+  CLICKHOUSE_USER: clickhouse
+  CLICKHOUSE_CLUSTER_ENABLED: "false"
+  REDIS_HOST: langfuse-redis
+  REDIS_PORT: "6379"
+  LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+  LANGFUSE_S3_EVENT_UPLOAD_REGION: auto
+  LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://langfuse-minio:9000
+  LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+  LANGFUSE_S3_EVENT_UPLOAD_PREFIX: events/
+  LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: langfuse
+  LANGFUSE_S3_MEDIA_UPLOAD_REGION: auto
+  LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: http://langfuse-minio:9000
+  LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: "true"
+  LANGFUSE_S3_MEDIA_UPLOAD_PREFIX: media/
+  LANGFUSE_INIT_ORG_ID: hdt
+  LANGFUSE_INIT_ORG_NAME: HDT
+  LANGFUSE_INIT_PROJECT_ID: hdt-council
+  LANGFUSE_INIT_PROJECT_NAME: hdt-council
+  LANGFUSE_INIT_USER_EMAIL: ${HDT_LANGFUSE_ADMIN_EMAIL:?set HDT_LANGFUSE_ADMIN_EMAIL in .env.prod}
+  LANGFUSE_INIT_USER_NAME: admin
+
+services:
+  # ------------------------------------------------------------------------------------------ images
+  hdt-base:
+    # Shared runtime image of the Python services; built, never started.
+    build:
+      context: .
+      dockerfile: services/base/Dockerfile
+    image: hdt/base:${HDT_IMAGE_TAG:-local}
+    scale: 0
+
+  # ------------------------------------------------------------------------------------------- stores
+  postgres:
+    <<: *hardened
+    build:
+      context: .
+      dockerfile: services/postgres/Dockerfile
+    image: hdt/postgres:${HDT_IMAGE_TAG:-local}
+    user: postgres
+    tmpfs: ["/tmp:size=256m,mode=1777", "/var/run/postgresql:size=16m,uid=999,gid=999,mode=2775"]
+    stop_grace_period: 60s
+    shm_size: 256m
+    mem_limit: 3g
+    pids_limit: 512
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_superuser_password
+      POSTGRES_DB: hdt
+      HDT_PG_PASSWORD_MIGRATOR_FILE: /run/secrets/pg_password.migrator
+      HDT_PG_PASSWORD_RECORDER_FILE: /run/secrets/pg_password.recorder
+      HDT_PG_PASSWORD_COUNCIL_FILE: /run/secrets/pg_password.council
+      HDT_PG_PASSWORD_SCORER_FILE: /run/secrets/pg_password.scorer
+      HDT_PG_PASSWORD_RISK_FILE: /run/secrets/pg_password.risk
+      HDT_PG_PASSWORD_EXECUTION_FILE: /run/secrets/pg_password.execution
+      HDT_PG_PASSWORD_NEWS_FILE: /run/secrets/pg_password.news
+      HDT_PG_PASSWORD_VETO_SCAN_FILE: /run/secrets/pg_password.veto_scan
+      HDT_PG_PASSWORD_CONFIGAPI_FILE: /run/secrets/pg_password.configapi
+      HDT_PG_PASSWORD_CONSOLE_RO_FILE: /run/secrets/pg_password.console_ro
+      HDT_PG_PASSWORD_PUBLISHER_RO_FILE: /run/secrets/pg_password.publisher_ro
+      HDT_PG_PASSWORD_TELEGRAM_FILE: /run/secrets/pg_password.telegram
+      HDT_PG_PASSWORD_BACKUP_FILE: /run/secrets/pg_password.backup
+      HDT_PG_PASSWORD_MONITOR_FILE: /run/secrets/pg_password.monitor
+    secrets:
+      - pg_superuser_password
+      - pg_password.migrator
+      - pg_password.recorder
+      - pg_password.council
+      - pg_password.scorer
+      - pg_password.risk
+      - pg_password.execution
+      - pg_password.news
+      - pg_password.veto_scan
+      - pg_password.configapi
+      - pg_password.console_ro
+      - pg_password.publisher_ro
+      - pg_password.telegram
+      - pg_password.backup
+      - pg_password.monitor
+    # WAL archiving for PITR: deploy/postgres/archive-wal.sh copies each completed segment into the
+    # pg_wal_archive volume (via .partial, fsync of the file and the directory before success is reported);
+    # the backup service encrypts and ships it, then deletes the local copy.
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=/bin/bash /etc/hdt-postgres/archive-wal.sh %p %f
+      - -c
+      - archive_timeout=120
+      - -c
+      - max_wal_senders=4
+      - -c
+      - max_connections=300
+      - -c
+      - shared_buffers=1GB
+      - -c
+      - effective_cache_size=3GB
+      - -c
+      - password_encryption=scram-sha-256
+      - -c
+      - log_timezone=UTC
+      - -c
+      - timezone=UTC
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - pg_wal_archive:/var/lib/postgresql/wal_archive
+      - ./deploy/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ./deploy/postgres/archive-wal.sh:/etc/hdt-postgres/archive-wal.sh:ro
+    networks: [net_data]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", "hdt"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 10
+
+  redis:
+    <<: *hardened
+    image: redis:7.4.8@sha256:3e0669e42d4fe421c9dea0ba5fbc04d336b80b4f32a6c7d25bee3a1d089288a1
+    user: redis
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --aclfile
+      - /run/secrets/redis_users.acl
+      # Below mem_limit: at the cap writes fail with an OOM error instead of the kernel killing Redis.
+      - --maxmemory
+      - 800mb
+      - --maxmemory-policy
+      - noeviction
+    mem_limit: 1g
+    pids_limit: 64
+    secrets: [redis_users.acl]
+    volumes:
+      - redis_data:/data
+    networks: [net_data]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --user admin --pass \"$$(sed -n 's/^user admin on >\\([^ ]*\\).*/\\1/p' /run/secrets/redis_users.acl)\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    <<: *app
+    restart: "no"
+    build:
+      <<: *build-app
+      dockerfile: services/migrate/Dockerfile
+    image: hdt/migrate:${HDT_IMAGE_TAG:-local}
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      HDT_PG_DSN_MIGRATOR_FILE: /run/secrets/pg_dsn.migrator
+    secrets: [pg_dsn.migrator]
+    networks: [net_data]
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  # ------------------------------------------------------------------------------- trading services
+  recorder:
+    <<: *app
+    build:
+      <<: *build-app
+      dockerfile: services/recorder/Dockerfile
+    image: hdt/recorder:${HDT_IMAGE_TAG:-local}
+    command: ["python", "-m", "hdt.ingest.scheduler"]
+    mem_limit: 1g
+    environment:
+      <<: *egress-env
+      HDT_PG_DSN_FILE: /run/secrets/pg_dsn.recorder
+      HDT_REDIS_URL_FILE: /run/secrets/redis_url.recorder
+      HDT_SCOPE_PRIVATE_KEY_FILE: /run/secrets/scope_private_key.recorder.json
+    secrets: [pg_dsn.recorder, redis_url.recorder, scope_private_key.recorder.json]
+    volumes:
+      - lake_data:/app/data
+    networks:
+      net_data: {}
+      net_proxy: {ipv4_address: 10.231.11.10}
+    depends_on: &depends-core
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+      egress-proxy: {condition: service_healthy}
+
+  council:
+    <<: *app
+    profiles: [council]
+    build:
+      <<: *build-app
+      dockerfile: services/council/Dockerfile
+    image: hdt/council:${HDT_IMAGE_TAG:-local}
+    command: ["python", "-m", "hdt.council.main"]
+    mem_limit: 2g
+    pids_limit: 512
+    environment:
+      <<: [*egress-env, *langfuse-client-env]
+      HDT_PG_DSN_FILE: /run/secrets/pg_dsn.council
+      HDT_REDIS_URL_FILE: /run/secrets/redis_url.council
+      HDT_SCOPE_PRIVATE_KEY_FILE: /run/secrets/scope_private_key.council.json
+    secrets:
+      [pg_dsn.council, redis_url.council, scope_private_key.council.json, langfuse_public_key, langfuse_secret_key]
+    volumes:
+      - lake_data:/app/data:ro
+    networks:
+      net_data: {}
+      net_fetch: {}
+      net_trace: {}
+      net_proxy: {ipv4_address: 10.231.11.11}
+    depends_on: *depends-core
+
+  news:
+    <<: *app
+    profiles: [news]
+    build:
+      <<: *build-app
+      dockerfile: services/news/Dockerfile
+    image: hdt/news:${HDT_IMAGE_TAG:-local}
+    command: ["python", "-m", "hdt.news.main"]
+    mem_limit: 1g
+    environment:
+      <<: [*egress-env, *langfuse-client-env]
+      HDT_PG_DSN_FILE: /run/secrets/pg_dsn.news
+      HDT_REDIS_URL_FILE: /run/secrets/redis_url.news
+      HDT_SCOPE_PRIVATE_KEY_FILE: /run/secrets/scope_private_key.news.json
+    secrets: [pg_dsn.news, redis_url.news, scope_private_key.news.json, langfuse_public_key, langfuse_secret_key]
+    # Read-only lake: point-in-time universe (coin mapping), CMC attention routes, DEX incident data.
+    volumes:
+      - lake_data:/app/data:ro
+    # Not on net_fetch: only the council's live tools call the fetcher (design contract section 10).
+    networks:
+      net_data: {}
+      net_trace: {}
+      net_proxy: {ipv4_address: 10.231.11.12}
+    depends_on: *depends-core
+
+  veto-scan:
+    <<: *app
+    profiles: [news]
+    build:
+      <<: *build-app
+      dockerfile: services/veto-scan/Dockerfile
+    image: hdt/veto-scan:${HDT_IMAGE_TAG:-local}
+    command: ["python", "-m", "hdt.news.veto_scan"]
+    environment:
+      <<: [*egress-env, *langfuse-client-env]
+      HDT_PG_DSN_FILE: /run/secrets/pg_dsn.veto_scan
+      HDT_REDIS_URL_FILE: /run/secrets/redis_url.veto_scan
+      HDT_SCOPE_PRIVATE_KEY_FILE: /run/secrets/scope_private_key.veto_scan.json
+    secrets:
+      [pg_dsn.veto_scan, redis_url.veto_scan, scope_private_key.veto_scan.json, langfuse_public_key, langfuse_secret_key]
+    # Read-only lake: point-in-time universe, DEX incident data for check_official.
+    volumes:
+      - lake_data:/app/data:ro
+    networks:
+      net_data: {}
+      net_trace: {}
+      net_proxy: {ipv4_address: 10.231.11.13}
+    depends_on: *depends-core
+
+  fetcher:
+    # Sandboxed article fetcher (phase 07, services/fetcher): no secrets, no volumes, one network.
+    <<: *app
+    profiles: [news]
+    build:
+      context: .
+      dockerfile: services/fetcher/Dockerfile
+    image: hdt/fetcher:${HDT_IMAGE_TAG:-local}
+    pids_limit: 128
+    # One core at most (a decompression or TLS burst cannot starve the host); the stdlib-only fetcher
+    # writes nothing, so /tmp is small and never executable.
+    cpus: 1.0
+    tmpfs: ["/tmp:size=16m,mode=1777,noexec,nosuid,nodev"]
+    environment:
+      HTTP_PROXY: http://egress-fetch:3128
+      HTTPS_PROXY: http://egress-fetch:3128
+      http_proxy: http://egress-fetch:3128
+      https_proxy: http://egress-fetch:3128
+    networks:
+      net_fetch: {ipv4_address: 10.231.12.10}
+    depends_on:
+      egress-fetch: {condition: service_healthy}
+
+  scorer:
+    <<: *app
+    profiles: [scoring]
+    build:
+      <<: *build-app
+      dockerfile: services/scorer/Dockerfile
+    image: hdt/scorer:${HDT_IMAGE_TAG:-local}
+    command: ["python", "-m", "hdt.scoring.main"]
+    mem_limit: 1g
+    environment:
+      <<: [*egress-env, *langfuse-client-env]
+      HDT_PG_DSN_FILE: /run/secrets/pg_dsn.scorer
+      HDT_REDIS_URL_FILE: /run/secrets/redis_url.scorer
+      HDT_SCOPE_PRIVATE_KEY_FILE: /run/secrets/scope_private_key.scorer.json
+    secrets:
+      [pg_dsn.scorer, redis_url.scorer, scope_private_key.scorer.json, langfuse_public_key, langfuse_secret_key]
+    volumes:
+      - lake_data:/app/data:ro
+    networks:
+      net_data: {}
+      net_trace: {}
+      net_proxy: {ipv4_address: 10.231.11.14}
+    depends_on: *depends-core
+
+  risk:
+    # No egress at all: Postgres, Redis and the read-only lake.
+    <<: *app
+    profiles: [trading]
+    build:
+      <<: *build-app
+      dockerfile: services/risk/Dockerfile
+    image: hdt/risk:${HDT_IMAGE_TAG:-local}
+    command: ["python", "-m", "hdt.risk.main"]
+    mem_limit: 1g
+    environment:
+      HDT_PG_DSN_FILE: /run/secrets/pg_dsn.risk
+      HDT_REDIS_URL_FILE: /run/secrets/redis_url.risk
+      HDT_ORDER_SIGNING_KEY_FILE: /run/secrets/order_signing_key
+    secrets: [pg_dsn.risk, redis_url.risk, order_signing_key]
+    volumes:
+      - lake_data:/app/data:ro
+    networks: [net_data]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+
+  execution:
+    # Only holder of Binance credentials (vault scope `exec`); egress only to Binance via egress-proxy.
+    <<: *app
+    profiles: [trading]
+    build:
+      <<: *build-app
+      dockerfile: services/execution/Dockerfile
+    image: hdt/execution:${HDT_IMAGE_TAG:-local}
+    command: ["python", "-m", "hdt.execution.main"]
+    stop_grace_period: 60s
+    mem_limit: 1g
+    environment:
+      <<: *egress-env
+      HDT_PG_DSN_FILE: /run/secrets/pg_dsn.execution
+      HDT_REDIS_URL_FILE: /run/secrets/redis_url.execution
+      HDT_SCOPE_PRIVATE_KEY_FILE: /run/secrets/scope_private_key.execution.json
+      HDT_ORDER_VERIFY_KEYS_FILE: /run/secrets/order_verify_keys.json
+    secrets: [pg_dsn.execution, redis_url.execution, scope_private_key.execution.json, order_verify_keys.json]
+    volumes:
+      - lake_data:/app/data:ro
+    networks:
+      net_data: {}
+      net_proxy: {ipv4_address: 10.231.11.15}
+    depends_on: *depends-core
+
+  testnet-driver:
+    # One-shot CLI (exit 0 = every lifecycle passed): own profile, never restarted, nothing to probe or
+    # scrape. Run: docker compose --profile testnet-driver run --rm testnet-driver [ARGS].
+    <<: *app
+    restart: "no"
+    profiles: [testnet-driver]
+    healthcheck:
+      disable: true
+    build:
+      <<: *build-app
+      dockerfile: services/testnet-driver/Dockerfile
+    image: hdt/testnet-driver:${HDT_IMAGE_TAG:-local}
+    command: ["python", "-m", "hdt.execution.testnet_driver"]
+    environment:
+      <<: *egress-env
+      HDT_REDIS_URL_FILE: /run/secrets/redis_url.testnet_driver
+      HDT_TESTNET_DRIVER_SIGNING_KEY_FILE: /run/secrets/testnet_driver_signing_key
+    secrets: [redis_url.testnet_driver, testnet_driver_signing_key]
+    networks:
+      net_data: {}
+      net_proxy: {ipv4_address: 10.231.11.18}
+    depends_on:
+      redis: {condition: service_healthy}
+      egress-proxy: {condition: service_healthy}
+
+  # ------------------------------------------------------------------------------------ admin side
+  config-api:
+    <<: *app
+    build:
+      <<: *build-app
+      dockerfile: services/config-api/Dockerfile
+    image: hdt/config-api:${HDT_IMAGE_TAG:-local}
+    command: ["python", "-m", "hdt.configapi.main"]
+    environment:
+      HDT_PG_DSN_FILE: /run/secrets/pg_dsn.configapi
+      HDT_REDIS_URL_FILE: /run/secrets/redis_url.configapi
+      HDT_SESSION_SECRET_FILE: /run/secrets/session_secret
+      # Only the console (fixed address on net_console) may forward the browser IP.
+      HDT_CONFIGAPI_TRUSTED_PROXIES: 10.231.14.10
+    secrets: [pg_dsn.configapi, redis_url.configapi, session_secret]
+    networks:
+      net_data: {}
+      net_console:
+        aliases: [config-api-console]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+
+  console:
+    <<: *app
+    build:
+      <<: *build-app
+      dockerfile: services/console/Dockerfile
+    image: hdt/console:${HDT_IMAGE_TAG:-local}
+    command: ["streamlit", "run", "src/hdt/console/app.py"]
+    mem_limit: 1g
+    environment:
+      HDT_PG_DSN_FILE: /run/secrets/pg_dsn.console
+      HDT_CONFIGAPI_URL: http://config-api-console:8081
+    secrets: [pg_dsn.console]
+    ports:
+      - "${HDT_TAILSCALE_IP:?set HDT_TAILSCALE_IP in .env.prod}:8501:8501"
+    networks:
+      net_data: {}
+      net_console: {ipv4_address: 10.231.14.10}
+      net_admin: {}
+    depends_on:
+      config-api: {condition: service_healthy}
+
+  telegram-bot:
+    <<: *app
+    build:
+      <<: *build-app
+      dockerfile: services/telegram-bot/Dockerfile
+    image: hdt/telegram-bot:${HDT_IMAGE_TAG:-local}
+    command: ["python", "-m", "hdt.ops.telegram_bot"]
+    environment:
+      <<: *egress-env
+      HDT_PG_DSN_FILE: /run/secrets/pg_dsn.telegram
+      HDT_REDIS_URL_FILE: /run/secrets/redis_url.telegram
+      HDT_SCOPE_PRIVATE_KEY_FILE: /run/secrets/scope_private_key.telegram.json
+      HDT_TELEGRAM_TOTP_SECRET_FILE: /run/secrets/telegram_totp_secret
+      HDT_PROMETHEUS_URL: http://prometheus:9090
+    secrets: [pg_dsn.telegram, redis_url.telegram, scope_private_key.telegram.json, telegram_totp_secret]
+    networks:
+      net_data: {}
+      net_proxy: {ipv4_address: 10.231.11.16}
+    healthcheck:
+      # Unhealthy when the bot loop stops completing iterations (the heartbeat gauge ticks every loop),
+      # not only when the process stops answering /metrics.
+      test:
+        - CMD
+        - python
+        - -m
+        - hdt.ops.healthcheck
+        - http://127.0.0.1:9464/metrics
+        - --fresh
+        - hdt_telegram_poll_heartbeat_timestamp_seconds
+        - --max-age
+        - "180"
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+    depends_on: *depends-core
+
+  # ------------------------------------------------------------------------------------ public path
+  public-publisher:
+    <<: *app
+    build:
+      <<: *build-app
+      dockerfile: services/public-publisher/Dockerfile
+    image: hdt/public-publisher:${HDT_IMAGE_TAG:-local}
+    command: ["python", "-m", "hdt.public.publisher"]
+    environment:
+      HDT_PG_DSN_FILE: /run/secrets/pg_dsn.publisher
+      HDT_PUBLIC_STORE_URL: http://public-store:9000
+      HDT_PUBLIC_STORE_BUCKET: hdt-public
+      HDT_PUBLIC_STORE_ACCESS_KEY_FILE: /run/secrets/public_store_writer_access_key
+      HDT_PUBLIC_STORE_SECRET_KEY_FILE: /run/secrets/public_store_writer_secret_key
+    secrets: [pg_dsn.publisher, public_store_writer_access_key, public_store_writer_secret_key]
+    networks: [net_data, net_store_write]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      public-store-init: {condition: service_completed_successfully}
+
+  public-store:
+    <<: *hardened
+    image: cgr.dev/chainguard/minio@sha256:6a1d0b45c8669726bba580ced0bfa4cb9fdeed1ed636dfabd81d1577beb6937b
+    command: ["server", "/data", "--address", ":9000"]
+    environment:
+      MINIO_ROOT_USER_FILE: /run/secrets/public_store_root_user
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/public_store_root_password
+      MINIO_BROWSER: "off"
+      MC_CONFIG_DIR: /tmp/.mc
+    secrets: [public_store_root_user, public_store_root_password]
+    volumes:
+      - public_store_data:/data
+    networks: [net_store_write, net_store_read]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+
+  public-store-init:
+    # One-shot: bucket, publisher (write) user and dashboard (read-only) user; idempotent.
+    <<: *hardened
+    restart: "no"
+    mem_limit: 256m
+    image: cgr.dev/chainguard/minio@sha256:6a1d0b45c8669726bba580ced0bfa4cb9fdeed1ed636dfabd81d1577beb6937b
+    entrypoint: ["sh", "/etc/hdt-public-store/init.sh"]
+    environment:
+      HDT_PUBLIC_LOCK_DAYS: ${HDT_PUBLIC_LOCK_DAYS:-1}
+    secrets:
+      - public_store_root_user
+      - public_store_root_password
+      - public_store_writer_access_key
+      - public_store_writer_secret_key
+      - public_store_reader_access_key
+      - public_store_reader_secret_key
+    volumes:
+      - ./deploy/public-store:/etc/hdt-public-store:ro
+    networks: [net_store_write]
+    depends_on:
+      public-store: {condition: service_healthy}
+
+  dashboard:
+    <<: *app
+    build:
+      <<: *build-app
+      dockerfile: services/dashboard/Dockerfile
+    image: hdt/dashboard:${HDT_IMAGE_TAG:-local}
+    command: ["streamlit", "run", "src/hdt/public_dashboard/app.py"]
+    mem_limit: 1g
+    pids_limit: 512
+    environment:
+      HDT_PUBLIC_STORE_URL: http://public-store:9000
+      HDT_PUBLIC_STORE_BUCKET: hdt-public
+      HDT_PUBLIC_STORE_ACCESS_KEY_FILE: /run/secrets/public_store_reader_access_key
+      HDT_PUBLIC_STORE_SECRET_KEY_FILE: /run/secrets/public_store_reader_secret_key
+    secrets: [public_store_reader_access_key, public_store_reader_secret_key]
+    networks: [net_edge, net_store_read]
+    depends_on:
+      public-store-init: {condition: service_completed_successfully}
+
+  caddy:
+    <<: *hardened
+    build:
+      context: services/caddy
+    image: hdt/caddy:${HDT_IMAGE_TAG:-local}
+    mem_limit: 256m
+    environment:
+      HDT_PUBLIC_HOSTNAME: ${HDT_PUBLIC_HOSTNAME:?set HDT_PUBLIC_HOSTNAME in .env.prod}
+      HDT_ACME_EMAIL: ${HDT_ACME_EMAIL:?set HDT_ACME_EMAIL in .env.prod}
+    ports:
+      - "443:8443"
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web/landing:/srv/landing:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [net_ingress, net_edge]
+    depends_on:
+      dashboard: {condition: service_healthy}
+
+  # -------------------------------------------------------------------------------------------- egress
+  egress-proxy:
+    <<: *hardened
+    build:
+      context: .
+      dockerfile: services/egress-proxy/Dockerfile
+    image: hdt/egress-proxy:${HDT_IMAGE_TAG:-local}
+    mem_limit: 256m
+    tmpfs: ["/tmp:size=64m,mode=1777", "/run/hdt-squid:size=1m,uid=13,gid=13,mode=0755"]
+    environment:
+      HDT_BACKUP_S3_ENDPOINT: ${HDT_BACKUP_S3_ENDPOINT:-}
+    volumes:
+      - ./deploy/squid:/etc/hdt-squid:ro
+    networks:
+      net_proxy: {ipv4_address: 10.231.11.5}
+      net_egress: {}
+
+  egress-fetch:
+    # Second instance of the same proxy for the fetcher alone (only 10.231.12.10 is allowed).
+    <<: *hardened
+    profiles: [news]
+    build:
+      context: .
+      dockerfile: services/egress-proxy/Dockerfile
+    image: hdt/egress-proxy:${HDT_IMAGE_TAG:-local}
+    mem_limit: 256m
+    tmpfs: ["/tmp:size=64m,mode=1777", "/run/hdt-squid:size=1m,uid=13,gid=13,mode=0755"]
+    volumes:
+      - ./deploy/squid:/etc/hdt-squid:ro
+    networks: [net_fetch, net_egress]
+
+  # ---------------------------------------------------------------------------------------- monitoring
+  prometheus:
+    <<: *hardened
+    image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=90d
+      - --storage.tsdb.retention.size=20GB
+    mem_limit: 1536m
+    volumes:
+      - ./deploy/prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    networks: [net_data, net_monitor, net_probe_edge]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9090/-/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  node-exporter:
+    <<: *hardened
+    image: prom/node-exporter:v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
+    command:
+      - --path.rootfs=/host
+      - --collector.textfile.directory=/textfile
+      - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run|var/lib/docker/.+)($$|/)
+    mem_limit: 128m
+    pids_limit: 64
+    volumes:
+      - /:/host:ro,rslave
+      - backup_metrics:/textfile:ro
+    networks: [net_monitor]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9100/metrics"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    <<: *hardened
+    image: grafana/grafana:13.2.2@sha256:ac461fb352abc50da10a51c7d02462e9c05488f11f53f14b3ad79a8145f638a0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
+      GF_SERVER_ROOT_URL: ${HDT_GRAFANA_URL:?set HDT_GRAFANA_URL in .env.prod}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+    secrets: [grafana_admin_password]
+    ports:
+      - "${HDT_TAILSCALE_IP:?set HDT_TAILSCALE_IP in .env.prod}:3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/grafana/dashboards:/etc/grafana/dashboards:ro
+    networks: [net_monitor, net_admin]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      prometheus: {condition: service_healthy}
+
+  alertmanager:
+    # Dead-man path only (deploy/alertmanager/alertmanager.yml): the always-firing Watchdog rule is sent
+    # every minute to an external check through egress-proxy; operator alerts go through the telegram-bot.
+    <<: *hardened
+    image: prom/alertmanager:v0.34.1@sha256:e9733bafb1bdef9b00e25a21f8f99dc26a22224bf16641ad754d1649f4c3357a
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.listen-address=10.231.13.10:9093
+      - --cluster.listen-address=
+    mem_limit: 128m
+    pids_limit: 64
+    tmpfs: ["/tmp:size=16m,mode=1777", "/alertmanager:size=16m,uid=65534,gid=65534,mode=0700"]
+    secrets: [alertmanager_deadman_url]
+    volumes:
+      - ./deploy/alertmanager:/etc/alertmanager:ro
+    networks:
+      net_monitor: {ipv4_address: 10.231.13.10}
+      net_proxy: {ipv4_address: 10.231.11.19}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://10.231.13.10:9093/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      egress-proxy: {condition: service_healthy}
+
+  blackbox:
+    # Probes config-api, console and egress-proxy (deploy/blackbox/blackbox.yml); listens only on its
+    # net_monitor address, so no service on net_console or net_proxy can drive it.
+    <<: *hardened
+    image: prom/blackbox-exporter:v0.28.0@sha256:e753ff9f3fc458d02cca5eddab5a77e1c175eee484a8925ac7d524f04366c2fc
+    user: "65534:65534"
+    command:
+      - --config.file=/etc/hdt-blackbox/blackbox.yml
+      - --web.listen-address=10.231.13.11:9115
+    mem_limit: 128m
+    pids_limit: 64
+    volumes:
+      - ./deploy/blackbox:/etc/hdt-blackbox:ro
+    networks:
+      net_monitor: {ipv4_address: 10.231.13.11}
+      net_console: {}
+      net_proxy: {ipv4_address: 10.231.11.20}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://10.231.13.11:9115/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  blackbox-edge:
+    # Probes caddy and the public dashboard from net_edge. Its only other network is net_probe_edge
+    # (prometheus alone), where it listens: a compromised dashboard can neither drive it nor reach
+    # anything through it.
+    <<: *hardened
+    image: prom/blackbox-exporter:v0.28.0@sha256:e753ff9f3fc458d02cca5eddab5a77e1c175eee484a8925ac7d524f04366c2fc
+    user: "65534:65534"
+    command:
+      - --config.file=/etc/hdt-blackbox/blackbox.yml
+      - --web.listen-address=10.231.15.10:9115
+    mem_limit: 128m
+    pids_limit: 64
+    volumes:
+      - ./deploy/blackbox:/etc/hdt-blackbox:ro
+    networks:
+      net_edge: {}
+      net_probe_edge: {ipv4_address: 10.231.15.10}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://10.231.15.10:9115/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  postgres-exporter:
+    # Connects as hdt_monitor (pg_monitor, read-only; deploy/postgres/init/02-ops-roles.sh).
+    <<: *hardened
+    image: prometheuscommunity/postgres-exporter:v0.20.1@sha256:ac5ec343104fae0e2d84a27bb8d69b38430a11910c5382cad85d478d2bab713e
+    command: ["--web.listen-address=10.231.13.12:9187"]
+    mem_limit: 128m
+    pids_limit: 64
+    environment:
+      DATA_SOURCE_URI: postgres:5432/hdt?sslmode=disable
+      DATA_SOURCE_USER: hdt_monitor
+      DATA_SOURCE_PASS_FILE: /run/secrets/pg_password.monitor
+    secrets: [pg_password.monitor]
+    networks:
+      net_data: {}
+      net_monitor: {ipv4_address: 10.231.13.12}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://10.231.13.12:9187/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  redis-exporter:
+    # ACL user `monitor`: server statistics only (no keys, no CONFIG, so config metrics are skipped).
+    # The image has no shell or HTTP client: its health is the `redis` scrape job (up, redis_up).
+    # -disable-scrape-endpoint: /scrape?target= would let anything on net_monitor aim it at another host.
+    <<: *hardened
+    image: oliver006/redis_exporter:v1.92.1@sha256:7fbc93d30f0f91eed1b2fe6968a956259cc5d260a984dd9071f1d1e9c2692ecd
+    command:
+      - -web.listen-address=10.231.13.13:9121
+      - -redis.addr=redis://redis:6379
+      - -redis.user=monitor
+      - -redis.password-file=/run/secrets/redis_password.monitor.json
+      - -config-command=-
+      - -disable-scrape-endpoint
+    mem_limit: 128m
+    pids_limit: 64
+    secrets: [redis_password.monitor.json]
+    networks:
+      net_data: {}
+      net_monitor: {ipv4_address: 10.231.13.13}
+    depends_on:
+      redis: {condition: service_healthy}
+
+  # ------------------------------------------------------------------------------------------- tracing
+  langfuse-web:
+    <<: *hardened
+    read_only: false
+    image: langfuse/langfuse:4.46.0@sha256:755b821ba8f73a20d43d90e68f2b75d2f597dd164c55890f67a05f5a8d0f0e24
+    entrypoint: ["/bin/sh", "/etc/hdt-langfuse/env-from-secret.sh", "dumb-init", "--", "./web/entrypoint.sh"]
+    command: ["node", "./web/server.js", "--keepAliveTimeout", "110000"]
+    mem_limit: 2g
+    environment:
+      <<: *langfuse-env
+      NEXTAUTH_URL: ${HDT_LANGFUSE_URL:?set HDT_LANGFUSE_URL in .env.prod}
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      AUTH_DISABLE_SIGNUP: "true"
+    secrets: [langfuse.env]
+    volumes:
+      - ./deploy/langfuse:/etc/hdt-langfuse:ro
+    ports:
+      - "${HDT_TAILSCALE_IP:?set HDT_TAILSCALE_IP in .env.prod}:3100:3000"
+    networks: [net_langfuse, net_trace, net_admin]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api/public/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 5
+    depends_on: &depends-langfuse-stores
+      langfuse-postgres: {condition: service_healthy}
+      langfuse-redis: {condition: service_healthy}
+      langfuse-clickhouse: {condition: service_healthy}
+      langfuse-minio: {condition: service_healthy}
+
+  langfuse-worker:
+    <<: *hardened
+    read_only: false
+    image: langfuse/langfuse-worker:4.46.0@sha256:3568d2d1eb5dd570f4087b37972ddffa3f6ae4f872553e0b0e2eedf4896a29e9
+    entrypoint: ["/bin/sh", "/etc/hdt-langfuse/env-from-secret.sh", "dumb-init", "--", "./worker/entrypoint.sh"]
+    command: ["node", "worker/dist/index.js"]
+    mem_limit: 2g
+    environment:
+      <<: *langfuse-env
+      # The worker binds its health server to $HOSTNAME (the container id) unless told otherwise.
+      HOSTNAME: 0.0.0.0
+    secrets: [langfuse.env]
+    volumes:
+      - ./deploy/langfuse:/etc/hdt-langfuse:ro
+    networks: [net_langfuse]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3030/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 5
+    depends_on: *depends-langfuse-stores
+
+  langfuse-postgres:
+    <<: *hardened
+    image: postgres:17.11@sha256:d74eeac9a635390a49bc21bd49fccd973de707e2a53a76ac49b552b8712ec46f
+    user: postgres
+    tmpfs: ["/tmp:size=64m,mode=1777", "/var/run/postgresql:size=16m,uid=999,gid=999,mode=2775"]
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_DB: langfuse
+      POSTGRES_PASSWORD_FILE: /run/secrets/langfuse_pg_password
+      TZ: UTC
+      PGTZ: UTC
+    secrets: [langfuse_pg_password]
+    volumes:
+      - langfuse_pg_data:/var/lib/postgresql/data
+    networks: [net_langfuse]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "langfuse", "-d", "langfuse"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 10
+
+  langfuse-redis:
+    <<: *hardened
+    image: redis:7.4.8@sha256:3e0669e42d4fe421c9dea0ba5fbc04d336b80b4f32a6c7d25bee3a1d089288a1
+    user: redis
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - exec redis-server --requirepass "$$(cat /run/secrets/langfuse_redis_password)" --maxmemory 400mb --maxmemory-policy noeviction --appendonly yes
+    pids_limit: 64
+    secrets: [langfuse_redis_password]
+    volumes:
+      - langfuse_redis_data:/data
+    networks: [net_langfuse]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$(cat /run/secrets/langfuse_redis_password)\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  langfuse-clickhouse:
+    # The image entrypoint writes users.d at start, so the root filesystem stays writable.
+    <<: *hardened
+    read_only: false
+    cap_add: [SYS_NICE]
+    image: clickhouse/clickhouse-server:25.12.11.4@sha256:8a790dd3468db22b1d4e7b18a176f378ff5ff6053b9c48dd4ea1fa71a24c5ba6
+    user: "101:101"
+    # ClickHouse sizes its memory to the cgroup limit and runs many threads.
+    mem_limit: 2g
+    pids_limit: 1024
+    environment:
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD_FILE: /run/secrets/langfuse_clickhouse_password
+    secrets: [langfuse_clickhouse_password]
+    ulimits:
+      nofile: {soft: 262144, hard: 262144}
+    volumes:
+      - langfuse_clickhouse_data:/var/lib/clickhouse
+      - langfuse_clickhouse_logs:/var/log/clickhouse-server
+    networks: [net_langfuse]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 10
+
+  langfuse-minio:
+    <<: *hardened
+    image: cgr.dev/chainguard/minio@sha256:6a1d0b45c8669726bba580ced0bfa4cb9fdeed1ed636dfabd81d1577beb6937b
+    entrypoint: ["sh", "-c"]
+    command:
+      - mkdir -p /data/langfuse && exec minio server --address :9000 /data
+    environment:
+      MINIO_ROOT_USER: langfuse
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/langfuse_minio_password
+      MINIO_BROWSER: "off"
+      MC_CONFIG_DIR: /tmp/.mc
+    secrets: [langfuse_minio_password]
+    volumes:
+      - langfuse_minio_data:/data
+    networks: [net_langfuse]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+
+  # -------------------------------------------------------------------------------------------- backup
+  backup:
+    <<: *hardened
+    build:
+      context: .
+      dockerfile: services/backup/Dockerfile
+    image: hdt/backup:${HDT_IMAGE_TAG:-local}
+    mem_limit: 1g
+    # Lets the running WAL upload finish; a stop that still kills one is safe (wal_in_flight,
+    # deploy/backup/backup.sh), and a killed daily step is retried.
+    stop_grace_period: 120s
+    environment:
+      PGHOST: postgres
+      PGUSER: hdt_backup
+      PGDATABASE: hdt
+      HDT_PG_PASSWORD_BACKUP_FILE: /run/secrets/pg_password.backup
+      HDT_BACKUP_TARGET: ${HDT_BACKUP_TARGET:?set HDT_BACKUP_TARGET in .env.prod}
+      HDT_BACKUP_S3_ENDPOINT: ${HDT_BACKUP_S3_ENDPOINT:-}
+      HDT_BACKUP_S3_REGION: ${HDT_BACKUP_S3_REGION:-us-east-1}
+      HDT_BACKUP_S3_ACCESS_KEY_FILE: /run/secrets/backup_s3_access_key
+      HDT_BACKUP_S3_SECRET_KEY_FILE: /run/secrets/backup_s3_secret_key
+      HDT_BACKUP_AGE_RECIPIENTS: ${HDT_BACKUP_AGE_RECIPIENTS:?set HDT_BACKUP_AGE_RECIPIENTS in .env.prod}
+      HDT_BACKUP_HOUR_UTC: ${HDT_BACKUP_HOUR_UTC:-3}
+      HDT_BACKUP_WAL_DIR: /var/lib/postgresql/wal_archive
+      HDT_BACKUP_LAKE_DIR: /data/lake
+      HDT_BACKUP_STATE_DIR: /var/lib/hdt-backup
+      HDT_BACKUP_METRICS_DIR: /var/lib/hdt-metrics
+      HTTPS_PROXY: http://egress-proxy:3128
+      https_proxy: http://egress-proxy:3128
+    secrets: [pg_password.backup, backup_s3_access_key, backup_s3_secret_key]
+    volumes:
+      - pg_wal_archive:/var/lib/postgresql/wal_archive
+      - lake_data:/data:ro
+      - backup_state:/var/lib/hdt-backup
+      - backup_metrics:/var/lib/hdt-metrics
+    networks:
+      net_data: {}
+      net_proxy: {ipv4_address: 10.231.11.17}
+    healthcheck:
+      # The daemon rewrites its status file every cycle (60 s).
+      test: ["CMD-SHELL", "test $$(( $$(date +%s) - $$(stat -c %Y /var/lib/hdt-metrics/hdt_backup.prom) )) -lt 300"]
+      interval: 60s
+      timeout: 5s
+      start_period: 120s
+      retries: 3
+    depends_on:
+      postgres: {condition: service_healthy}
+      egress-proxy: {condition: service_healthy}
+
+networks:
+  net_ingress: {}
+  net_egress: {}
+  net_admin:
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+  net_edge: {internal: true}
+  net_store_read: {internal: true}
+  net_store_write: {internal: true}
+  net_data: {internal: true}
+  net_trace: {internal: true}
+  net_langfuse: {internal: true}
+  # Networks with fixed addresses (squid ACLs, config-api trusted proxy, monitoring listeners) use
+  # 10.231.0.0/16, outside Docker's default address pools, so automatically numbered networks never
+  # collide. Fixed addresses stay below .128; ip_range keeps dynamic addresses in the upper half.
+  net_console:
+    internal: true
+    ipam:
+      config: [{subnet: 10.231.14.0/24, ip_range: 10.231.14.128/25}]
+  net_proxy:
+    internal: true
+    ipam:
+      config: [{subnet: 10.231.11.0/24, ip_range: 10.231.11.128/25}]
+  net_fetch:
+    internal: true
+    ipam:
+      config: [{subnet: 10.231.12.0/24, ip_range: 10.231.12.128/25}]
+  net_monitor:
+    internal: true
+    ipam:
+      config: [{subnet: 10.231.13.0/24, ip_range: 10.231.13.128/25}]
+  net_probe_edge:
+    internal: true
+    ipam:
+      config: [{subnet: 10.231.15.0/24, ip_range: 10.231.15.128/25}]
+
+volumes:
+  pg_data:
+  pg_wal_archive:
+  redis_data:
+  lake_data:
+  public_store_data:
+  caddy_data:
+  caddy_config:
+  prometheus_data:
+  grafana_data:
+  langfuse_pg_data:
+  langfuse_redis_data:
+  langfuse_clickhouse_data:
+  langfuse_clickhouse_logs:
+  langfuse_minio_data:
+  backup_state:
+  backup_metrics:
+
+secrets:
+  pg_superuser_password: {file: ./secrets/pg_superuser_password}
+  pg_password.migrator: {file: ./secrets/pg_password.migrator}
+  pg_password.recorder: {file: ./secrets/pg_password.recorder}
+  pg_password.council: {file: ./secrets/pg_password.council}
+  pg_password.scorer: {file: ./secrets/pg_password.scorer}
+  pg_password.risk: {file: ./secrets/pg_password.risk}
+  pg_password.execution: {file: ./secrets/pg_password.execution}
+  pg_password.news: {file: ./secrets/pg_password.news}
+  pg_password.veto_scan: {file: ./secrets/pg_password.veto_scan}
+  pg_password.configapi: {file: ./secrets/pg_password.configapi}
+  pg_password.console_ro: {file: ./secrets/pg_password.console_ro}
+  pg_password.publisher_ro: {file: ./secrets/pg_password.publisher_ro}
+  pg_password.telegram: {file: ./secrets/pg_password.telegram}
+  pg_password.backup: {file: ./secrets/pg_password.backup}
+  pg_dsn.migrator: {file: ./secrets/pg_dsn.migrator}
+  pg_dsn.recorder: {file: ./secrets/pg_dsn.recorder}
+  pg_dsn.council: {file: ./secrets/pg_dsn.council}
+  pg_dsn.scorer: {file: ./secrets/pg_dsn.scorer}
+  pg_dsn.risk: {file: ./secrets/pg_dsn.risk}
+  pg_dsn.execution: {file: ./secrets/pg_dsn.execution}
+  pg_dsn.news: {file: ./secrets/pg_dsn.news}
+  pg_dsn.veto_scan: {file: ./secrets/pg_dsn.veto_scan}
+  pg_dsn.configapi: {file: ./secrets/pg_dsn.configapi}
+  pg_dsn.console: {file: ./secrets/pg_dsn.console}
+  pg_dsn.publisher: {file: ./secrets/pg_dsn.publisher}
+  pg_dsn.telegram: {file: ./secrets/pg_dsn.telegram}
+  redis_users.acl: {file: ./secrets/redis_users.acl}
+  redis_url.recorder: {file: ./secrets/redis_url.recorder}
+  redis_url.council: {file: ./secrets/redis_url.council}
+  redis_url.news: {file: ./secrets/redis_url.news}
+  redis_url.veto_scan: {file: ./secrets/redis_url.veto_scan}
+  redis_url.scorer: {file: ./secrets/redis_url.scorer}
+  redis_url.risk: {file: ./secrets/redis_url.risk}
+  redis_url.execution: {file: ./secrets/redis_url.execution}
+  redis_url.testnet_driver: {file: ./secrets/redis_url.testnet_driver}
+  redis_url.configapi: {file: ./secrets/redis_url.configapi}
+  redis_url.telegram: {file: ./secrets/redis_url.telegram}
+  scope_private_key.recorder.json: {file: ./secrets/scope_private_key.recorder.json}
+  scope_private_key.council.json: {file: ./secrets/scope_private_key.council.json}
+  scope_private_key.news.json: {file: ./secrets/scope_private_key.news.json}
+  scope_private_key.veto_scan.json: {file: ./secrets/scope_private_key.veto_scan.json}
+  scope_private_key.scorer.json: {file: ./secrets/scope_private_key.scorer.json}
+  scope_private_key.execution.json: {file: ./secrets/scope_private_key.execution.json}
+  scope_private_key.telegram.json: {file: ./secrets/scope_private_key.telegram.json}
+  order_signing_key: {file: ./secrets/order_signing_key}
+  order_verify_keys.json: {file: ./secrets/order_verify_keys.json}
+  testnet_driver_signing_key: {file: ./secrets/testnet_driver_signing_key}
+  session_secret: {file: ./secrets/session_secret}
+  telegram_totp_secret: {file: ./secrets/telegram_totp_secret}
+  public_store_root_user: {file: ./secrets/public_store_root_user}
+  public_store_root_password: {file: ./secrets/public_store_root_password}
+  public_store_writer_access_key: {file: ./secrets/public_store_writer_access_key}
+  public_store_writer_secret_key: {file: ./secrets/public_store_writer_secret_key}
+  public_store_reader_access_key: {file: ./secrets/public_store_reader_access_key}
+  public_store_reader_secret_key: {file: ./secrets/public_store_reader_secret_key}
+  grafana_admin_password: {file: ./secrets/grafana_admin_password}
+  langfuse.env: {file: ./secrets/langfuse.env}
+  langfuse_public_key: {file: ./secrets/langfuse_public_key}
+  langfuse_secret_key: {file: ./secrets/langfuse_secret_key}
+  langfuse_pg_password: {file: ./secrets/langfuse_pg_password}
+  langfuse_redis_password: {file: ./secrets/langfuse_redis_password}
+  langfuse_clickhouse_password: {file: ./secrets/langfuse_clickhouse_password}
+  langfuse_minio_password: {file: ./secrets/langfuse_minio_password}
+  backup_s3_access_key: {file: ./secrets/backup_s3_access_key}
+  backup_s3_secret_key: {file: ./secrets/backup_s3_secret_key}
+  pg_password.monitor: {file: ./secrets/pg_password.monitor}
+  redis_password.monitor.json: {file: ./secrets/redis_password.monitor.json}
+  alertmanager_deadman_url: {file: ./secrets/alertmanager_deadman_url}

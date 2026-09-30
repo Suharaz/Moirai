@@ -1,0 +1,40 @@
+/* Sealbox frame styles. Colors are the Moirai design tokens (hdt.console.theme), set as CSS variables by
+   sealbox.js from the values the console passes in (dark defaults below match the console's default theme). */
+:root {
+  --bg: #0B0A0F; --surface: #16131D; --surface-2: #1F1B28; --border: #2B2635; --border-2: #3D3649;
+  --field: #716A7E; --text: #ECE6D8; --text-2: #BAB3C4; --text-3: #9C96A8; --primary: #C9A55C;
+  --primary-h: #D7B879; --on-primary: #17141F; --focus: #E3CB94; --link: #DDC28A; --pos: #5FD394;
+  --neg: #F47C70; --info: #8DB8EC; --info-bg: rgba(141,184,236,.12); --pos-bg: rgba(95,211,148,.12);
+  --neg-bg: rgba(244,124,112,.12);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: transparent; color: var(--text); }
+body { font: 400 14px/1.55 'Fira Sans', 'Segoe UI', system-ui, sans-serif; }
+.sb { display: grid; gap: 14px; padding: 2px 2px 6px; }
+.mono { font-family: 'Fira Code', Consolas, monospace; font-variant-numeric: tabular-nums; }
+.callout { display: flex; gap: 10px; padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.5;
+  border: 1px solid color-mix(in srgb, var(--info) 40%, transparent); background: var(--info-bg); color: var(--text); }
+.callout.ok { border-color: color-mix(in srgb, var(--pos) 40%, transparent); background: var(--pos-bg); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 13px; font-weight: 600; color: var(--text); }
+.help { font-size: 12.5px; color: var(--text-3); }
+.input { width: 100%; min-height: 40px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--field);
+  background: var(--surface-2); color: var(--text); font: 400 14px 'Fira Code', Consolas, monospace; }
+.input:focus { outline: 2px solid var(--focus); outline-offset: 0; border-color: transparent; }
+.input[aria-invalid="true"] { border-color: var(--neg); }
+.err { font-size: 12.5px; color: var(--neg); min-height: 0; }
+.err:empty { display: none; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 14px;
+  border-radius: 8px; border: 1px solid var(--primary); background: var(--primary); color: var(--on-primary);
+  font: 600 13.5px/1 'Fira Sans', 'Segoe UI', system-ui, sans-serif; cursor: pointer; }
+.btn:hover { background: var(--primary-h); border-color: var(--primary-h); }
+.btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.btn.is-loading::before { content: ""; width: 14px; height: 14px; border: 2px solid currentColor;
+  border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.status { font-size: 13px; color: var(--text-2); }
+.status:empty { display: none; }
+@media (pointer: coarse), (max-width: 767px) { .btn, .input { min-height: 44px; } .input { font-size: 16px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

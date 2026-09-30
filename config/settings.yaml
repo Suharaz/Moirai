@@ -1,0 +1,39 @@
+# Static defaults (versioned file). Runtime values are immutable config versions from the console.
+schema_version: 1
+
+data:
+  stale_s: 180                    # single staleness threshold for market data (Risk rejects older Binance data)
+  lake_root: data/lake
+  staging_root: data/staging
+  raw_depth_retention_days: 90
+
+cmc:
+  base_url: https://pro-api.coinmarketcap.com
+  keyless_base_url: https://pro-api.coinmarketcap.com/public-api
+  ws_url: wss://pro-stream.coinmarketcap.com/v1
+  rate_limit_per_min: 600         # Startup plan; the real value is read from /v1/key/info
+  keyless_rate_limit_per_min: 15  # keyless base, per IP: a burst of 23 calls in 13 s got 1011 (2026-09-30)
+  quota_monthly_design: 450000    # design estimate; the real value is read from /v1/key/info
+  alert_projection_frac: 0.85     # alert when the monthly projection exceeds 85 % of quota
+  save_block_projection_frac: 0.90  # console refuses route configs projecting above 90 %
+  pilot_max_projection_frac: 0.80   # 7-day pilot target before phase 11
+  request_timeout_s: 20
+
+streams:
+  block_ms: 5000
+  batch_size: 50
+  reclaim_idle_ms: 60000
+  maxlen:
+    candidates: 100000
+    risk_flags: 100000
+    decisions: 100000
+    orders: 200000
+    account_state: 50000
+    config_changed: 10000
+    secret_test_request: 10000
+    secret_test_result: 10000
+    controls: 10000
+    dead_letter: 100000
+
+logging:
+  level: INFO

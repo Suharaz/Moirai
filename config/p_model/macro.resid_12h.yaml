@@ -1,0 +1,38 @@
+# Per-agent, per-target p_model coefficients: config/p_model/<agent>.<target_type>.yaml (labels are never
+# pooled across target types). Written by scripts/fit_p_model.py as a new versioned file, promoted by review.
+schema_version: 1
+agent: macro
+p_model_ver: macro-resid_12h-pm0
+target_type: RESID_12H
+label_spec_version: lbl1
+fit_window_start: null
+fit_window_end: null
+sample_count: 0
+oos_logloss: null
+intercept: 0.0
+coefficients:
+  regime_trend: 0.0
+  regime_high_vol: 0.0
+  fear_greed: 0.0
+  btc_dominance: 0.0
+  altcoin_index: 0.0
+  exch_reserve_stable_chg_1d: 0.0
+  exch_reserve_btc_chg_1d: 0.0
+standardization:                # identity until the first fit (no lake samples yet)
+  regime_trend: {mean: 0.0, std: 1.0}
+  regime_high_vol: {mean: 0.0, std: 1.0}
+  fear_greed: {mean: 0.0, std: 1.0}
+  btc_dominance: {mean: 0.0, std: 1.0}
+  altcoin_index: {mean: 0.0, std: 1.0}
+  exch_reserve_stable_chg_1d: {mean: 0.0, std: 1.0}
+  exch_reserve_btc_chg_1d: {mean: 0.0, std: 1.0}
+families:
+  regime: [regime_trend, regime_high_vol]
+  sentiment: [fear_greed]
+  dominance: [btc_dominance, altcoin_index]
+  reserves: [exch_reserve_stable_chg_1d, exch_reserve_btc_chg_1d]
+shrunk_families: [regime, sentiment, dominance, reserves]
+note: >-
+  Not fitted: gate G1 has not run on the recorded lake yet, so every feature family lacks data and
+  all coefficients are shrunk to 0 (p_model = sigmoid(0) = 0.5, the uninformed base rate). The first
+  fit (scripts/fit_p_model.py, L2 logistic, walk-forward) writes a new versioned file for review.
